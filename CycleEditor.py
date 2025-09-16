@@ -1,7 +1,7 @@
 import numpy
 
 class CoatCycle():
-    def __init__(self, cycle_count, arr_reservoir = [], arr_coat_count = []):
+    def __init__(self, cycle_count = 0, arr_reservoir = [], arr_coat_count = []):
         if len(arr_reservoir) != len(arr_coat_count):
             print("ERROR reservoir array and coat count array have unequal size")
             return 0
@@ -33,6 +33,9 @@ class CoatCycle():
                     print("Cycle #{0} Step #{1} : Coating Reservoir #{2} : Coat #{3} deployed".format(cycle_index, step_index, self.current_reservoir, coat_index))
                 self.incrementStep()
             self.incrementCycle()
+    
+    def changeCycleCount(self, cycle_count):
+        self.cycle_count = cycle_count
 
     def incrementStep(self):
         self.current_step =+ 1
