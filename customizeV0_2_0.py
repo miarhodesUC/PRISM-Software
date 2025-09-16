@@ -284,7 +284,8 @@ class Ui_MainWindow(object):
 
     def clickedStartCycle(self):
         print("Beginning coating cycle...\n")
-        print("Cycle executor not yet implemented\n")
+        print("Cycle executor not yet implemented, print dummy will be used instead\n")
+        self.active_cycle.executeCycle()
     
 
 
