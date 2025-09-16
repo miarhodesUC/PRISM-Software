@@ -293,10 +293,11 @@ class Ui_MainWindow(object):
         except ValueError:
             print("ERROR Number of Cycles accepts integers only")
         print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
-        print("Saving not yet implemented\n")
+        print("Saving implemented, but not loading\n")
         arr_reservoir = self.active_cycle.arr_reservoir
         arr_coat_count = self.active_cycle.arr_coat_count
-        save_vector = [arr_reservoir, arr_coat_count]
+        cycle_count = self.active_cycle.cycle_count
+        save_vector = [arr_reservoir, arr_coat_count, [cycle_count]]
 
         with open("SavedCycle.csv", "w", newline="") as file:
             writer = csv.writer(file)
