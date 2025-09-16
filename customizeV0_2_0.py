@@ -225,6 +225,33 @@ class Ui_MainWindow(object):
         self.label_selectCoating.setText(_translate("MainWindow", "Coating Solution:"))
         self.label_numberOfCoats.setText(_translate("MainWindow", "Number of Coats:"))
     
+    def loadStepWidget(self, number_of_coats, coating_solution_index):
+        self.unit_step = QWidget()
+        self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
+        self.unit_step.setObjectName("unit_step")
+        self.unit_step.setStyleSheet("background-color: #E5A1DA")
+
+        self.selectCoating.setCurrentIndex(coating_solution_index)
+        coating_solution = self.selectCoating.currentText()
+
+        self.label_Solution = QLabel(self.unit_step)
+        self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
+        self.label_Solution.setAutoFillBackground(True)
+        self.label_Solution.setObjectName("label_Solution")
+        self.label_Solution.setText(coating_solution)
+
+        self.label_Coats = QtWidgets.QLabel(self.unit_step)
+        self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
+        self.label_Coats.setAutoFillBackground(True)
+        self.label_Coats.setObjectName("label_Coats")
+        self.label_Coats.setText("Coats: {}".format(number_of_coats))
+
+        self.button_delete = QtWidgets.QPushButton(self.unit_step)
+        self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
+        self.button_delete.setObjectName("button_delete")
+        self.button_delete.setText("Delete")
+        self.button_delete.clicked.connect(self.unit_step.deleteLater)
+
     def addStepWidget(self):
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
@@ -297,16 +324,14 @@ class Ui_MainWindow(object):
         arr_reservoir = self.active_cycle.arr_reservoir
         arr_coat_count = self.active_cycle.arr_coat_count
         cycle_count = self.active_cycle.cycle_count
-        save_vector = [arr_reservoir, arr_coat_count, [cycle_count]]
+        step_count = self.active_cycle.step_count
+        save_vector = [arr_reservoir, arr_coat_count, [step_count, cycle_count]]
 
         with open("SavedCycle.csv", "w", newline="") as file:
             writer = csv.writer(file)
             for row in save_vector:
                 writer.writerow(row)
             print("Cycle data saved to SavedCycle.csv")
-
-
-
 
     def clickedStartCycle(self):
         number_of_cycles = self.lineEdit_numberOfCycles.text()
@@ -319,7 +344,19 @@ class Ui_MainWindow(object):
         self.active_cycle.executeCycle()
 
     def clickedLoadCycle(self):
-        pass
+        save_vector = []
+        with open("SavedCycle.csv", "r") as file:
+            content = csv.reader(file)
+            for line in content:
+                save_vector.append(line)
+        number_of_steps = save_vector[2][0]
+        number_of_cycles = save_vector[2][1]
+        for step in range(number_of_steps):
+            coating_solution_index = save_vector[0][step]
+            number_of_coats = save_vector[1][step]
+            self.loadStepWidget(number_of_coats, coating_solution_index)
+        self.lineEdit_numberOfCycles.setText(number_of_cycles)
+        
     
 
 
