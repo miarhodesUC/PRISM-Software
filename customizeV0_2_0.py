@@ -11,9 +11,9 @@
 STYLE GUIDE:
 (Colors in HSB)
 
-Bright: 310 30 90
+Bright: 310 25 90
 Grey: 280 25 75
-Dark: 250 50 50
+Dark: 250 75 50
 """
 
 
@@ -26,6 +26,7 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
+        MainWindow.setWindowIcon(QtGui.QIcon("prism_icon.jpg"))
         MainWindow.resize(1024, 600)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -205,7 +206,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PRISM LbL"))
         self.button_addStep.setText(_translate("MainWindow", "Add Step"))
         self.selectCoating.setItemText(0, _translate("MainWindow", "Reservoir 1"))
         self.selectCoating.setItemText(1, _translate("MainWindow", "Reservoir 2"))
