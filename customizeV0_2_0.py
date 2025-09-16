@@ -24,8 +24,8 @@ import CycleEditor
 from CycleEditor import CoatCycle
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow, SavedCycle: CoatCycle):
-        self.active_cycle = SavedCycle
+    def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
+        self.active_cycle = ActiveCycle
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
@@ -293,9 +293,9 @@ class Ui_MainWindow(object):
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    SavedCycle = CycleEditor()
+    ActiveCycle = CoatCycle()
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui.setupUi(MainWindow, ActiveCycle)
     MainWindow.show()
     sys.exit(app.exec_())
