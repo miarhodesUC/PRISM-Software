@@ -252,6 +252,8 @@ class Ui_MainWindow(object):
         self.button_delete.setText("Delete")
         self.button_delete.clicked.connect(self.unit_step.deleteLater)
 
+        self.active_cycle.addStep(coating_solution_index, number_of_coats)
+
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
 
     def addStepWidget(self):
@@ -322,7 +324,7 @@ class Ui_MainWindow(object):
         except ValueError:
             print("ERROR Number of Cycles accepts integers only")
         print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
-        print("Saving implemented, but not loading\n")
+        print("Saving...")
         arr_reservoir = self.active_cycle.arr_reservoir
         arr_coat_count = self.active_cycle.arr_coat_count
         cycle_count = self.active_cycle.cycle_count
@@ -358,6 +360,8 @@ class Ui_MainWindow(object):
             number_of_coats = int(save_vector[1][step])
             self.loadStepWidget(number_of_coats, coating_solution_index)
         self.lineEdit_numberOfCycles.setText(number_of_cycles)
+        self.active_cycle.changeCycleCount(int(number_of_cycles))
+        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
         
     
 

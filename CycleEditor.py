@@ -44,3 +44,4 @@ class CoatCycle():
     def incrementCycle(self):
         self.current_cycle += 1
     
+    
