@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLay
 from PyQt5.QtCore import Qt
 import CycleEditor
 from CycleEditor import CoatCycle
+import csv
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
@@ -130,6 +131,11 @@ class Ui_MainWindow(object):
         self.button_StartCycle.setGeometry(QtCore.QRect(640, 440, 320, 50))
         self.button_StartCycle.setText("Start Cycle")
         self.button_StartCycle.clicked.connect(self.clickedStartCycle)
+
+        self.button_LoadCycle = QtWidgets.QPushButton(self.widget_CycleEditor)
+        self.button_LoadCycle.setGeometry(QtCore.QRect(640, 380, 320, 50))
+        self.button_LoadCycle.setText("Load Saved Cycle")
+        self.button_LoadCycle.clicked.connect(self.clickedLoadCycle)
 
         self.stackedWidget.addWidget(self.widget_CycleEditor)
 
@@ -288,6 +294,18 @@ class Ui_MainWindow(object):
             print("ERROR Number of Cycles accepts integers only")
         print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
         print("Saving not yet implemented\n")
+        arr_reservoir = self.active_cycle.arr_reservoir
+        arr_coat_count = self.active_cycle.arr_coat_count
+        save_vector = [arr_reservoir, arr_coat_count]
+
+        with open("SavedCycle.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            for row in save_vector:
+                writer.writerow(row)
+            print("Cycle data saved to SavedCycle.csv")
+
+
+
 
     def clickedStartCycle(self):
         number_of_cycles = self.lineEdit_numberOfCycles.text()
@@ -298,6 +316,9 @@ class Ui_MainWindow(object):
         print("Beginning coating cycle...\n")
         print("Cycle executor not yet implemented, print dummy will be used instead\n")
         self.active_cycle.executeCycle()
+
+    def clickedLoadCycle(self):
+        pass
     
 
 
