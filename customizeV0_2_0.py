@@ -230,7 +230,7 @@ class Ui_MainWindow(object):
             print("ERROR Incorrect value entered in Number of Coats, integers only")
             return
         
-        coating_solution = self.selectCoating.currentText()
+        coating_solution = self.selectCoating.currentIndex()
 
         self.active_cycle.addStep(coating_solution, number_of_coats)
 
@@ -281,12 +281,18 @@ class Ui_MainWindow(object):
     
     def clickedSaveCycleEditor(self):
         number_of_cycles = self.lineEdit_numberOfCycles.text()
-        self.active_cycle.changeCycleCount(number_of_cycles)
+        try:
+            self.active_cycle.changeCycleCount(int(number_of_cycles))
+        except ValueError:
+            print("ERROR Number of Cycles accepts integers only")
         print("Saving not yet implemented\n")
 
     def clickedStartCycle(self):
         number_of_cycles = self.lineEdit_numberOfCycles.text()
-        self.active_cycle.changeCycleCount(number_of_cycles)
+        try:
+            self.active_cycle.changeCycleCount(int(number_of_cycles))
+        except ValueError:
+            print("ERROR Number of Cycles accepts integers only")
         print("Beginning coating cycle...\n")
         print("Cycle executor not yet implemented, print dummy will be used instead\n")
         self.active_cycle.executeCycle()
