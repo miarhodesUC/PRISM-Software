@@ -24,6 +24,9 @@ import CycleEditor
 from CycleEditor import CoatCycle
 import csv
 
+# WARNING: Deleting cycles does not remove them from the backend
+# NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
         self.active_cycle = ActiveCycle
@@ -211,7 +214,6 @@ class Ui_MainWindow(object):
         self.button_SaveSettings.setText("Save")
         self.button_SaveSettings.clicked.connect(self.clickedSaveSettings)
 
-
         self.stackedWidget.addWidget(self.widget_Settings)
 
     def retranslateUi(self, MainWindow):
@@ -225,13 +227,16 @@ class Ui_MainWindow(object):
         self.label_selectCoating.setText(_translate("MainWindow", "Coating Solution:"))
         self.label_numberOfCoats.setText(_translate("MainWindow", "Number of Coats:"))
     
-    def loadStepWidget(self, number_of_coats, coating_solution_index):
+    def loadStepWidget(self, coat_count, reservoir_index):
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
 
-        self.selectCoating.setCurrentIndex(coating_solution_index)
+        self.unit_step.setProperty("reservoir_index", reservoir_index)
+        self.unit_step.setProperty("coat_count", coat_count)
+
+        self.selectCoating.setCurrentIndex(reservoir_index)
         coating_solution = self.selectCoating.currentText()
 
         self.label_Solution = QLabel(self.unit_step)
@@ -244,45 +249,43 @@ class Ui_MainWindow(object):
         self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
         self.label_Coats.setAutoFillBackground(True)
         self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(number_of_coats))
+        self.label_Coats.setText("Coats: {}".format(coat_count))
 
         self.button_delete = QtWidgets.QPushButton(self.unit_step)
         self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
         self.button_delete.setObjectName("button_delete")
         self.button_delete.setText("Delete")
         self.button_delete.clicked.connect(self.unit_step.deleteLater)
-
-        self.active_cycle.addStep(coating_solution_index, number_of_coats)
 
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
 
     def addStepWidget(self):
+        try:
+            coat_count = int(self.lineEdit_numberOfCoats.text())
+        except ValueError:
+            print("ERROR Incorrect value entered in Number of Coats, integers only")
+            return
+        coating_solution = self.selectCoating.currentText()
+        reservoir_index = self.selectCoating.currentIndex()
+
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
-        try:
-            number_of_coats = int(self.lineEdit_numberOfCoats.text())
-        except ValueError:
-            print("ERROR Incorrect value entered in Number of Coats, integers only")
-            return
-        
-        coating_solution = self.selectCoating.currentText()
-        coating_solution_index = self.selectCoating.currentIndex()
-
-        self.active_cycle.addStep(coating_solution_index, number_of_coats)
+        self.unit_step.setProperty("reservoir_index", reservoir_index)
+        self.unit_step.setProperty("coat_count", coat_count)
 
         self.label_Solution = QLabel(self.unit_step)
         self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
         self.label_Solution.setAutoFillBackground(True)
         self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText(coating_solution)
+        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
 
         self.label_Coats = QtWidgets.QLabel(self.unit_step)
         self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
         self.label_Coats.setAutoFillBackground(True)
         self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(number_of_coats))
+        self.label_Coats.setText("Coats: {}".format(coat_count))
 
         self.button_delete = QtWidgets.QPushButton(self.unit_step)
         self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
@@ -290,8 +293,33 @@ class Ui_MainWindow(object):
         self.button_delete.setText("Delete")
         self.button_delete.clicked.connect(self.unit_step.deleteLater)
 
+
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
     
+    def gatherCycleSettings(self):
+        try:
+            cycle_count = int(self.lineEdit_numberOfCycles.text())
+        except ValueError:
+            print("Incorrect value in number of cycles")
+            return 0
+        step_count = self.Coating_Step_List_Layout.count()
+        arr_coat_count = [0] * step_count
+        arr_reservoir = [0] * step_count
+        for step in range(step_count):
+            active_step = self.Coating_Step_List_Layout.itemAt(step).widget()
+            coating_count = active_step.property("coat_count")
+            arr_coat_count[step] = coating_count
+
+            reservoir_index = active_step.property("reservoir_index")
+            arr_reservoir[step] = reservoir_index
+
+            print("Step #{0} : Coat count = {1} : Reservoir index = {2}".format(step, coating_count, reservoir_index))
+        
+        self.step_count = step_count
+        self.cycle_count = cycle_count
+        self.arr_coat_count = arr_coat_count
+        self.arr_reservoir = arr_reservoir
+
     def clickedHome(self):
         self.stackedWidget.setCurrentIndex(0)
         self.button_SaveSettings.setText("Save")
@@ -318,19 +346,11 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(3, text_res4)
     
     def clickedSaveCycleEditor(self):
-        number_of_cycles = self.lineEdit_numberOfCycles.text()
-        try:
-            self.active_cycle.changeCycleCount(int(number_of_cycles))
-        except ValueError:
-            print("ERROR Number of Cycles accepts integers only")
-        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
-        print("Saving...")
-        arr_reservoir = self.active_cycle.arr_reservoir
-        arr_coat_count = self.active_cycle.arr_coat_count
-        cycle_count = self.active_cycle.cycle_count
-        step_count = self.active_cycle.step_count
-        save_vector = [arr_reservoir, arr_coat_count, [step_count, cycle_count]]
+        self.gatherCycleSettings()
 
+        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.cycle_count, self.step_count))
+        print("Saving...")
+        save_vector = [self.arr_reservoir, self.arr_coat_count, [self.step_count, self.cycle_count]]
         with open("SavedCycle.csv", "w", newline="") as file:
             writer = csv.writer(file)
             for row in save_vector:
@@ -338,12 +358,12 @@ class Ui_MainWindow(object):
             print("Cycle data saved to SavedCycle.csv")
 
     def clickedStartCycle(self):
-        number_of_cycles = self.lineEdit_numberOfCycles.text()
-        try:
-            self.active_cycle.changeCycleCount(int(number_of_cycles))
-        except ValueError:
-            print("ERROR Number of Cycles accepts integers only")
         print("Beginning coating cycle...\n")
+        self.gatherCycleSettings()
+        self.active_cycle.loadCycleSettings(self.cycle_count,
+                                            self.step_count,
+                                            self.arr_reservoir,
+                                            self.arr_coat_count)
         print("Cycle executor not yet implemented, print dummy will be used instead\n")
         self.active_cycle.executeCycle()
 
@@ -352,16 +372,17 @@ class Ui_MainWindow(object):
         with open("SavedCycle.csv", "r") as file:
             content = csv.reader(file)
             for line in content:
-                save_vector.append(line)
-        number_of_steps = int(save_vector[2][0])
-        number_of_cycles = save_vector[2][1]
-        for step in range(number_of_steps):
-            coating_solution_index = int(save_vector[0][step])
-            number_of_coats = int(save_vector[1][step])
-            self.loadStepWidget(number_of_coats, coating_solution_index)
-        self.lineEdit_numberOfCycles.setText(number_of_cycles)
-        self.active_cycle.changeCycleCount(int(number_of_cycles))
-        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
+                int_line = [int(s) for s in line]
+                save_vector.append(int_line)
+                print(int_line)
+        self.step_count = save_vector[2][0]
+        self.cycle_count = save_vector[2][1]
+        self.arr_reservoir = save_vector[0]
+        self.arr_coat_count = save_vector[1]
+
+        for step in range(self.step_count):
+            self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
+        self.lineEdit_numberOfCycles.setText(str(self.cycle_count))
         
     
 

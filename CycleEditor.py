@@ -25,6 +25,12 @@ class CoatCycle():
     def generateSaveFile(self):
         pass
 
+    def loadCycleSettings(self, cycle_count, step_count, arr_reservoir, arr_coat_count):
+        self.cycle_count = cycle_count
+        self.step_count = step_count
+        self.arr_reservoir = arr_reservoir
+        self.arr_coat_count = arr_coat_count
+
     def executeCycle(self):
         for cycle_index in range(self.cycle_count):
             for step_index in range(self.step_count):
