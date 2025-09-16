@@ -18,8 +18,8 @@ class CoatCycle():
         self.current_reservoir = 0
 
     def addStep(self, reservoir, coat):
-        self.arrReservoir.append(reservoir)
-        self.arrCoatCount.append(coat)
+        self.arr_reservoir.append(reservoir)
+        self.arr_coat_count.append(coat)
 
     def generateSaveFile(self):
         pass
