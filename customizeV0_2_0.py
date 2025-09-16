@@ -230,9 +230,10 @@ class Ui_MainWindow(object):
             print("ERROR Incorrect value entered in Number of Coats, integers only")
             return
         
-        coating_solution = self.selectCoating.currentIndex()
+        coating_solution = self.selectCoating.currentText()
+        coating_solution_index = self.selectCoating.currentIndex()
 
-        self.active_cycle.addStep(coating_solution, number_of_coats)
+        self.active_cycle.addStep(coating_solution_index, number_of_coats)
 
         self.label_Solution = QLabel(self.unit_step)
         self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
