@@ -20,9 +20,12 @@ Dark: 250 75 50
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt
+import CycleEditor
+from CycleEditor import CoatCycle
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, SavedCycle: CoatCycle):
+        self.active_cycle = SavedCycle
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
@@ -76,10 +79,11 @@ class Ui_MainWindow(object):
         self.Add_Coating_Step.setFrameShadow(QtWidgets.QFrame.Raised)
         self.Add_Coating_Step.setObjectName("Add_Coating_Step")
 
+        
         self.button_addStep = QtWidgets.QPushButton(self.Add_Coating_Step)
         self.button_addStep.setGeometry(QtCore.QRect(4, 150, 331, 31))
         self.button_addStep.setObjectName("button_addStep")
-        self.button_addStep.clicked.connect(self.addStepWidget)
+        self.button_addStep.clicked.connect(self.clickedAddStep)
 
         self.selectCoating = QtWidgets.QComboBox(self.Add_Coating_Step)
         self.selectCoating.setGeometry(QtCore.QRect(150, 40, 181, 31))
@@ -228,6 +232,8 @@ class Ui_MainWindow(object):
         
         coating_solution = self.selectCoating.currentText()
 
+        self.active_cycle.addStep(coating_solution, number_of_coats)
+
         self.label_Solution = QLabel(self.unit_step)
         self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
         self.label_Solution.setAutoFillBackground(True)
@@ -287,6 +293,7 @@ class Ui_MainWindow(object):
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    SavedCycle = CycleEditor()
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
