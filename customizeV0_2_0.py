@@ -252,6 +252,8 @@ class Ui_MainWindow(object):
         self.button_delete.setText("Delete")
         self.button_delete.clicked.connect(self.unit_step.deleteLater)
 
+        self.Coating_Step_List_Layout.addWidget(self.unit_step)
+
     def addStepWidget(self):
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
@@ -349,11 +351,11 @@ class Ui_MainWindow(object):
             content = csv.reader(file)
             for line in content:
                 save_vector.append(line)
-        number_of_steps = save_vector[2][0]
+        number_of_steps = int(save_vector[2][0])
         number_of_cycles = save_vector[2][1]
         for step in range(number_of_steps):
-            coating_solution_index = save_vector[0][step]
-            number_of_coats = save_vector[1][step]
+            coating_solution_index = int(save_vector[0][step])
+            number_of_coats = int(save_vector[1][step])
             self.loadStepWidget(number_of_coats, coating_solution_index)
         self.lineEdit_numberOfCycles.setText(number_of_cycles)
         
