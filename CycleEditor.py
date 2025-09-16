@@ -25,11 +25,11 @@ class CoatCycle():
         pass
 
     def executeCycle(self):
-        for cycle_index in self.cycle_count:
-            for step_index in self.step_count:
+        for cycle_index in range(self.cycle_count):
+            for step_index in range(self.step_count):
                 self.current_reservoir = self.arr_reservoir[step_index]
                 self.current_coat_count = self.arr_coat_count[step_index]
-                for coat_index in self.current_coat_count:
+                for coat_index in range(self.current_coat_count):
                     print("Cycle #{0} Step #{1} : Coating Reservoir #{2} : Coat #{3} deployed".format(cycle_index, step_index, self.current_reservoir, coat_index))
                 self.incrementStep()
             self.incrementCycle()

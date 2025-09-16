@@ -280,9 +280,13 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(3, text_res4)
     
     def clickedSaveCycleEditor(self):
+        number_of_cycles = self.lineEdit_numberOfCycles.text()
+        self.active_cycle.changeCycleCount(number_of_cycles)
         print("Saving not yet implemented\n")
 
     def clickedStartCycle(self):
+        number_of_cycles = self.lineEdit_numberOfCycles.text()
+        self.active_cycle.changeCycleCount(number_of_cycles)
         print("Beginning coating cycle...\n")
         print("Cycle executor not yet implemented, print dummy will be used instead\n")
         self.active_cycle.executeCycle()
