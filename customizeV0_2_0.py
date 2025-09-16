@@ -286,6 +286,7 @@ class Ui_MainWindow(object):
             self.active_cycle.changeCycleCount(int(number_of_cycles))
         except ValueError:
             print("ERROR Number of Cycles accepts integers only")
+        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.active_cycle.cycle_count, self.active_cycle.step_count))
         print("Saving not yet implemented\n")
 
     def clickedStartCycle(self):
