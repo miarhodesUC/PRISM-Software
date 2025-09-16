@@ -83,7 +83,7 @@ class Ui_MainWindow(object):
         self.button_addStep = QtWidgets.QPushButton(self.Add_Coating_Step)
         self.button_addStep.setGeometry(QtCore.QRect(4, 150, 331, 31))
         self.button_addStep.setObjectName("button_addStep")
-        self.button_addStep.clicked.connect(self.clickedAddStep)
+        self.button_addStep.clicked.connect(self.addStepWidget)
 
         self.selectCoating = QtWidgets.QComboBox(self.Add_Coating_Step)
         self.selectCoating.setGeometry(QtCore.QRect(150, 40, 181, 31))
