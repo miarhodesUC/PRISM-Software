@@ -1,4 +1,5 @@
 import numpy
+import csv
 
 class CoatCycle():
     def __init__(self, cycle_count = 0, arr_reservoir = [], arr_coat_count = []):
@@ -23,7 +24,12 @@ class CoatCycle():
         self.step_count += 1
 
     def generateSaveFile(self):
-        pass
+        save_vector = [self.arr_reservoir, self.arr_coat_count, [self.step_count, self.cycle_count]]
+        with open("SavedCycle.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            for row in save_vector:
+                writer.writerow(row)
+            print("Cycle data saved to SavedCycle.csv")
 
     def loadCycleSettings(self, cycle_count, step_count, arr_reservoir, arr_coat_count):
         self.cycle_count = cycle_count

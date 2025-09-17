@@ -347,15 +347,8 @@ class Ui_MainWindow(object):
     
     def clickedSaveCycleEditor(self):
         self.gatherCycleSettings()
-
-        print("Number of cycles: {0}\n Number of steps: {1}\n".format(self.cycle_count, self.step_count))
-        print("Saving...")
-        save_vector = [self.arr_reservoir, self.arr_coat_count, [self.step_count, self.cycle_count]]
-        with open("SavedCycle.csv", "w", newline="") as file:
-            writer = csv.writer(file)
-            for row in save_vector:
-                writer.writerow(row)
-            print("Cycle data saved to SavedCycle.csv")
+        self.active_cycle.loadCycleSettings()
+        self.active_cycle.generateSaveFile()
 
     def clickedStartCycle(self):
         print("Beginning coating cycle...\n")
