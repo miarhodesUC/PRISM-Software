@@ -243,7 +243,7 @@ class Ui_MainWindow(object):
         self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
         self.label_Solution.setAutoFillBackground(True)
         self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText(coating_solution)
+        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
 
         self.label_Coats = QtWidgets.QLabel(self.unit_step)
         self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
