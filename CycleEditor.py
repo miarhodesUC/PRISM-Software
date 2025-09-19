@@ -30,6 +30,20 @@ class CoatCycle():
             for row in save_vector:
                 writer.writerow(row)
             print("Cycle data saved to SavedCycle.csv")
+    
+    def loadSaveFile(self):
+        save_vector = []
+        with open("SavedCycle.csv", "r") as file:
+            content = csv.reader(file)
+            for line in content:
+                int_line = [int(s) for s in line]
+                save_vector.append(int_line)
+                print(int_line)
+        self.step_count = save_vector[2][0]
+        self.cycle_count = save_vector[2][1]
+        self.arr_reservoir = save_vector[0]
+        self.arr_coat_count = save_vector[1]
+        
 
     def loadCycleSettings(self, cycle_count, step_count, arr_reservoir, arr_coat_count):
         self.cycle_count = cycle_count

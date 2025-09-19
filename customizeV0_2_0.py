@@ -214,6 +214,11 @@ class Ui_MainWindow(object):
         self.button_SaveSettings.setText("Save")
         self.button_SaveSettings.clicked.connect(self.clickedSaveSettings)
 
+        self.button_SaveSettings = QtWidgets.QPushButton(self.widget_Settings)
+        self.button_SaveSettings.setGeometry(QtCore.QRect(810, 400, 150, 40))
+        self.button_SaveSettings.setText("Load")
+        self.button_SaveSettings.clicked.connect(self.clickedLoadSettings)
+
         self.stackedWidget.addWidget(self.widget_Settings)
 
     def retranslateUi(self, MainWindow):
@@ -344,10 +349,37 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(1, text_res2)
         self.selectCoating.setItemText(2, text_res3)
         self.selectCoating.setItemText(3, text_res4)
+        save_vector = [text_res1, text_res2, text_res3, text_res4]
+        with open("SavedSettings.csv", "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(save_vector)
+            print("Settings data saved to SavedSettings.csv")
+    def clickedLoadSettings(self):
+        str_line = []
+        with open("SavedSettings.csv", "r") as file:
+            content = csv.reader(file)
+            str_line = [s for s in content]
+            print(str_line)
+        
+        text_res1 = str_line[0][0]
+        text_res2 = str_line[0][1]
+        text_res3 = str_line[0][2]
+        text_res4 = str_line[0][3]
+        
+        self.lineEdit_Reservoir1.setText(text_res1)
+        self.lineEdit_Reservoir2.setText(text_res2)
+        self.lineEdit_Reservoir3.setText(text_res3)
+        self.lineEdit_Reservoir4.setText(text_res4)
+
+        self.selectCoating.setItemText(0, text_res1)
+        self.selectCoating.setItemText(1, text_res2)
+        self.selectCoating.setItemText(2, text_res3)
+        self.selectCoating.setItemText(3, text_res4)
+        
     
     def clickedSaveCycleEditor(self):
         self.gatherCycleSettings()
-        self.active_cycle.loadCycleSettings()
+        self.active_cycle.loadCycleSettings(self.cycle_count, self.step_count, self.arr_reservoir, self.arr_coat_count)
         self.active_cycle.generateSaveFile()
 
     def clickedStartCycle(self):
@@ -361,17 +393,11 @@ class Ui_MainWindow(object):
         self.active_cycle.executeCycle()
 
     def clickedLoadCycle(self):
-        save_vector = []
-        with open("SavedCycle.csv", "r") as file:
-            content = csv.reader(file)
-            for line in content:
-                int_line = [int(s) for s in line]
-                save_vector.append(int_line)
-                print(int_line)
-        self.step_count = save_vector[2][0]
-        self.cycle_count = save_vector[2][1]
-        self.arr_reservoir = save_vector[0]
-        self.arr_coat_count = save_vector[1]
+        self.active_cycle.loadSaveFile()
+        self.step_count = self.active_cycle.step_count
+        self.cycle_count = self.active_cycle.cycle_count
+        self.arr_reservoir = self.active_cycle.arr_reservoir
+        self.arr_coat_count = self.active_cycle.arr_coat_count
 
         for step in range(self.step_count):
             self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
