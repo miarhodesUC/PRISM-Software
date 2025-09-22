@@ -205,12 +205,12 @@ class Ui_MainWindow(object):
         self.lineEdit_Reservoir4.setGeometry(QtCore.QRect(250, 270, 250, 30))
 
         self.button_Home_Settings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_Home_Settings.setGeometry(QtCore.QRect(640, 500, 150, 40))
+        self.button_Home_Settings.setGeometry(QtCore.QRect(640, 450, 150, 40))
         self.button_Home_Settings.setText("Return Home") # TODO: Make into a SAVE AND RETURN
         self.button_Home_Settings.clicked.connect(self.clickedHome)
 
         self.button_SaveSettings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_SaveSettings.setGeometry(QtCore.QRect(810, 500, 150, 40))
+        self.button_SaveSettings.setGeometry(QtCore.QRect(810, 450, 150, 40))
         self.button_SaveSettings.setText("Save")
         self.button_SaveSettings.clicked.connect(self.clickedSaveSettings)
 
