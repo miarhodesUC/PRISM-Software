@@ -72,10 +72,10 @@ class Ui_MainWindow(object):
         self.widget_CycleEditor.setObjectName("widget_CycleEditor")
 
         self.label_numberOfCycles = QLabel(self.widget_CycleEditor)
-        self.label_numberOfCycles.setGeometry(QtCore.QRect(10, 510, 150, 30))
+        self.label_numberOfCycles.setGeometry(QtCore.QRect(10, 460, 150, 30))
         self.label_numberOfCycles.setText("Number of Cycles:")
         self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
-        self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 510, 50, 30))
+        self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 460, 50, 30))
 
         self.Add_Coating_Step = QtWidgets.QFrame(self.widget_CycleEditor)
         self.Add_Coating_Step.setGeometry(QtCore.QRect(640, 10, 361, 231))
@@ -121,22 +121,22 @@ class Ui_MainWindow(object):
         self.Coating_Step_List_Layout = QVBoxLayout(self.Coating_Step_List)
 
         self.button_Home_CycleEditor = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_Home_CycleEditor.setGeometry(QtCore.QRect(640, 500, 150, 40))
+        self.button_Home_CycleEditor.setGeometry(QtCore.QRect(640, 460, 150, 40))
         self.button_Home_CycleEditor.setText("Return Home") # TODO: Make into a SAVE AND RETURN
         self.button_Home_CycleEditor.clicked.connect(self.clickedHome)
 
         self.button_SaveCycleEditor = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_SaveCycleEditor.setGeometry(QtCore.QRect(810, 500, 150, 40))
+        self.button_SaveCycleEditor.setGeometry(QtCore.QRect(810, 460, 150, 40))
         self.button_SaveCycleEditor.setText("Save")
         self.button_SaveCycleEditor.clicked.connect(self.clickedSaveCycleEditor)
 
         self.button_StartCycle = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_StartCycle.setGeometry(QtCore.QRect(640, 440, 320, 50))
+        self.button_StartCycle.setGeometry(QtCore.QRect(640, 400, 320, 50))
         self.button_StartCycle.setText("Start Cycle")
         self.button_StartCycle.clicked.connect(self.clickedStartCycle)
 
         self.button_LoadCycle = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_LoadCycle.setGeometry(QtCore.QRect(640, 380, 320, 50))
+        self.button_LoadCycle.setGeometry(QtCore.QRect(640, 340, 320, 50))
         self.button_LoadCycle.setText("Load Saved Cycle")
         self.button_LoadCycle.clicked.connect(self.clickedLoadCycle)
 
