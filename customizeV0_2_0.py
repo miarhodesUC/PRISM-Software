@@ -214,10 +214,10 @@ class Ui_MainWindow(object):
         self.button_SaveSettings.setText("Save")
         self.button_SaveSettings.clicked.connect(self.clickedSaveSettings)
 
-        self.button_SaveSettings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_SaveSettings.setGeometry(QtCore.QRect(810, 400, 150, 40))
-        self.button_SaveSettings.setText("Load")
-        self.button_SaveSettings.clicked.connect(self.clickedLoadSettings)
+        self.button_LoadSettings = QtWidgets.QPushButton(self.widget_Settings)
+        self.button_LoadSettings.setGeometry(QtCore.QRect(810, 400, 150, 40))
+        self.button_LoadSettings.setText("Load")
+        self.button_LoadSettings.clicked.connect(self.clickedLoadSettings)
 
         self.stackedWidget.addWidget(self.widget_Settings)
 
