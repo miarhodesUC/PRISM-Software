@@ -6,11 +6,10 @@ from enum import Enum
 
 
 class SCodeParse():
-    def __init__(self, filename):
+    def __init__(self, filename : str, MotorSolenoid):
         self.filename = filename
         self.command_vector = []
-        self.motor_solenoid = MotorSolenoid()
-
+        self.motor_solenoid = MotorSolenoid
     def splitFile(self):
         with open(self.filename, "r") as file:
             content = csv.reader(file)
@@ -23,21 +22,20 @@ class SCodeParse():
             match self.command_vector[line_number][0]:
                 case 'MOVE':
                     move_state = self.command_vector[line_number][1]
+                    self.commandMOVE(move_state)
                 case 'PUMP':
                     pump_state = self.command_vector[line_number][1]
-                    pass
+                    self.commandPUMP(pump_state)
                 case 'VALV':
                     valv_state = self.command_vector[line_number][1]
-                    pass
+                    self.commandVALV(valv_state)
                 case 'HOME':
                     home_state = self.command_vector[line_number][1]
-                    pass
+                    self.commandHOME(home_state)
                 case _:
                     print("ERROR Invalid keyword on line {}")
+                
     def commandHOME(self, state):
-        #switch for axis or ALL
-        #each axis will have an associated motor
-        #if ALL, move each motor until limit switch
         match state[0]:
             case 'X':
                 self.motor_solenoid.homeMotorX()
@@ -50,11 +48,9 @@ class SCodeParse():
                 self.motor_solenoid.homeMotorY()
                 self.motor_solenoid.homeMotorT()
             case _:
-                print("{} is an invalid state".format(state[0]))
+                print("{} is an invalid state for HOME".format(state[0]))
 
     def commandMOVE(self, state):
-        #switch for axis
-        #each axis will have associated motor
         try: 
             distance_value = int(state[1:])
         except:
@@ -93,6 +89,7 @@ class SCodeParse():
                 duty_cycle = int(state)
                 self.motor_solenoid.pwmValve(duty_cycle)
 
+
 class I2C():
     I2C_BUS = 1
     def __init__(self, i2c_address):
@@ -129,6 +126,75 @@ class I2C():
         self.i2cTransmit(register_address)
         self.i2cTransmit(tx_data)
 
+class HAL(): # Contains basic GPIO commands
+    PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
+    def __init__(self, pi = pigpio.pi()):
+        self.pi = pi
+    def checkPin(self, pin, method:str):
+        if pin < 0:
+            print("Error in {}: pin value should be positive".format(method))
+            return -1
+        if pin > 25:
+            print("Error in {}: no exposed GPIO pins greater than 25".format(method))
+            return -1
+        else:
+            pass
+
+    def setPinHigh(self, pin:int):
+        self.checkPin(pin, "setPinHigh")
+        self.pi.write(pin, 1)
+
+    def setPinLow(self, pin:int):
+        self.checkPin(pin, "setPinLow")
+        self.pi.write(pin, 0)
+
+    def setPWM(self, pin, duty_cycle:int, frequency_index:int):
+        if duty_cycle < 1:
+            print("Error in HAL.setPWM: duty cycle should be an integer greater than one \n Check if input is negative or a decimal \n" \
+            "If attempting to turn off pwm, use HAL.setPinLow")
+            return -1
+        if frequency_index < 0:
+            print("Error in HAL.setPWM: frequency index cannot be negative")
+            return -1
+        self.checkPin(pin, "setPWM")
+        self.pi.set_PWM_frequency(pin, self.PWM_FREQUENCY_LIST[frequency_index])
+        self.pi.set_PWM_dutycycle(pin, duty_cycle)
+    def setDirection(self, direction, pin):
+        if direction == 1:
+            self.setPinHigh(pin)
+        elif direction == 0:
+            self.setPinLow(pin)
+        else:
+            print("Error in HAL.setDirection: invalid direction input")
+            return -1
+    def selectDEMUX(self, selection_index, pin0, pin1):
+        match selection_index:
+            case 0:
+                self.setPinLow(pin0)
+                self.setPinLow(pin1)
+            case 1:
+                self.setPinHigh(pin0)
+                self.setPinLow(pin1)
+            case 2:
+                self.setPinLow(pin0)
+                self.setPinHigh(pin1)
+            case 3:
+                self.setPinHigh(pin0)
+                self.setPinHigh(pin1)
+            case _:
+                print("Error in HAL.selectDEMUX: selection index is invalid, check type or make sure it is in range [0, 3]")
+                return -1
+    def moveStepperMotor(self, step_pin, direction_pin, direction, selection_index, pin0, pin1, duty_cycle, frequency_index):
+        self.setDirection(direction, direction_pin)
+        self.selectDEMUX(selection_index, pin0, pin1)
+        self.setPWM(step_pin, duty_cycle, frequency_index)
+
+    def stopStepperMotor(self, step_pin):
+        self.setPinLow(step_pin)
+    
+    
+
+
 
 class MotorSolenoid():
     # place constants here for pin allocation
@@ -151,8 +217,6 @@ class MotorSolenoid():
     DIRECTION_POSITIVE = 1
     DIRECTION_NEGATIVE = 0
 
-    
-
     # Duty cycle
     DUTY_CYCLE_HALF = 128
     DUTY_CYCLE_QUARTER = 64
@@ -165,8 +229,8 @@ class MotorSolenoid():
     STEP_MODE_VALUE = 1
     DISTANCE_PER_STEP = 1
     VOLUME_PER_STEP = 1
-    def __init__(self):
-        self.pi= pigpio.pi()
+    def __init__(self, pi = pigpio.pi()):
+        self.pi= pi
         self.setFrequency(self.LOCOMOTIVE_DIRECTION_PIN)
         self.setFrequency(self.PERISTALTIC_STEP_PIN)
 
