@@ -66,43 +66,6 @@ class SCodeParse():
                     print("Error in commandVALV: {} could not be retyped as an integer".format(state))
                 self.motor_solenoid.pwmValve(duty_cycle)
 
-
-class I2C():
-    I2C_BUS = 1
-    def __init__(self, i2c_address):
-        self.pi = pigpio.pi()
-        self.handle = self.pi.i2c_open(self.I2C_BUS, i2c_address)
-        # self.transmit_buffer = []
-        # self.receive_buffer = []
-    
-    def i2cTransmit(self, tx_data):
-        error = self.pi.i2c_wsrite_device(self.handle, tx_data)
-        print("Transmitting data: {}\n".format(tx_data))
-        if error == 0:
-            print("SUCCESS")
-        else:
-            print("FAILED error code: {}".format(error))
-        return error
-    
-    def i2cReceive(self, byte_count):
-        rx_data = self.pi.i2c_read_device(self.handle, byte_count)
-        return rx_data
-    
-    def i2cPing(self):
-        ping = [] # if this breaks, add a 0 or something
-        return self.i2cTransmit(ping)
-    
-    def i2cReadRegister(self, register_address, byte_count):
-        print("Reading register: {}".format(register_address))
-        self.i2cTransmit(register_address)
-        rx_data = self.i2cReceive(byte_count)
-        return rx_data
-    
-    def i2cWriteRegister(self, register_address, tx_data):
-        print("Writing to register: {}".format(register_address))
-        self.i2cTransmit(register_address)
-        self.i2cTransmit(tx_data)
-
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     def __init__(self, pi = pigpio.pi()):
@@ -271,7 +234,42 @@ class MotorSolenoid():
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
         self.moveStop(self.PERISTALTIC_STEP_PIN)
-        
+
+class I2C():
+    I2C_BUS = 1
+    def __init__(self, i2c_address):
+        self.pi = pigpio.pi()
+        self.handle = self.pi.i2c_open(self.I2C_BUS, i2c_address)
+        # self.transmit_buffer = []
+        # self.receive_buffer = []
+    
+    def i2cTransmit(self, tx_data):
+        error = self.pi.i2c_wsrite_device(self.handle, tx_data)
+        print("Transmitting data: {}\n".format(tx_data))
+        if error == 0:
+            print("SUCCESS")
+        else:
+            print("FAILED error code: {}".format(error))
+        return error
+    
+    def i2cReceive(self, byte_count):
+        rx_data = self.pi.i2c_read_device(self.handle, byte_count)
+        return rx_data
+    
+    def i2cPing(self):
+        ping = [] # if this breaks, add a 0 or something
+        return self.i2cTransmit(ping)
+    
+    def i2cReadRegister(self, register_address, byte_count):
+        print("Reading register: {}".format(register_address))
+        self.i2cTransmit(register_address)
+        rx_data = self.i2cReceive(byte_count)
+        return rx_data
+    
+    def i2cWriteRegister(self, register_address, tx_data):
+        print("Writing to register: {}".format(register_address))
+        self.i2cTransmit(register_address)
+        self.i2cTransmit(tx_data)   
 
 
 
