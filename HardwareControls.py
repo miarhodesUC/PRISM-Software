@@ -71,8 +71,11 @@ class HAL(): # Contains basic GPIO commands
     def __init__(self, pi = pigpio.pi()):
         self.pi = pi
     def checkPin(self, pin, method:str):
-        if pin < 0:
-            print("Error in {0}: {1} is an invalid pin, pin value should be positive".format(method, pin))
+        if type(pin) is not int:
+            print("Error in {0}: {1} is an invalid pin, pin value should be an integer".format(method, pin))
+            return -1
+        if pin <= 0:
+            print("Error in {0}: {1} is an invalid pin, pin value should be a natural number".format(method, pin))
             return -1
         if pin > 25:
             print("Error in {0}: {1} is an invalid pin, no exposed GPIO pins greater than 25 exist".format(method, pin))
@@ -95,6 +98,8 @@ class HAL(): # Contains basic GPIO commands
         if frequency_index < 0:
             print("Error in HAL.setPWM: {} is an invalid frequency index, frequency index cannot be negative".format(frequency_index))
             return -1
+        if frequency_index > 18:
+            print("Error in HAL.setPWM: {} is an invalid frequency index, no frequency indices greater than 17".format(frequency_index))
         if self.checkPin(pin, "setPWM") == -1:
             return -1
         self.pi.set_PWM_frequency(pin, self.PWM_FREQUENCY_LIST[frequency_index])
@@ -131,7 +136,11 @@ class HAL(): # Contains basic GPIO commands
     def stopStepperMotor(self, step_pin):
         self.setPinLow(step_pin)
     def checkLimitSwitch(self, switch_pin):
-        state = self.pi.read(switch_pin)
+        try:
+            state = self.pi.read(switch_pin)
+        except:
+            print("Pin {} does not exist".format(switch_pin))
+            return -1
         return state
 
 class MotorSolenoid():
@@ -168,7 +177,7 @@ class MotorSolenoid():
     DISTANCE_PER_STEP = 1
     VOLUME_PER_STEP = 1
     def __init__(self, hal = HAL()):
-        self.hal = HAL()
+        self.hal = hal
     def setLocomotiveSelect(self, axis:int):
         self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
     def setPeristalticSelect(self, pump:int):

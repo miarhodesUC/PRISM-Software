@@ -1,81 +1,114 @@
 # test file
-from HardwareControls import SCodeParse, MotorSolenoid, I2C
-import pytest
+from HardwareControls import SCodeParse, MotorSolenoid
+from HAL_shell import HAL_shell
 import pigpio
+import csv
+import time
+import pytest
+from numpy import heaviside as u
 
-class HAL_shell():
-    PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    def __init__(self, pi = pigpio.pi()):
-        self.pi = pi
-    def checkPin(self, pin, method:str):
-        if pin < 0:
-            print("Error in {0}: {1} is an invalid pin, pin value should be positive".format(method, pin))
-            return -1
-        if pin > 25:
-            print("Error in {0}: {1} is an invalid pin, no exposed GPIO pins greater than 25 exist".format(method, pin))
-            return -1
-        else:
-            pass
-    def setPinHigh(self, pin:int):
-        if self.checkPin(pin, "setPinHigh") == -1:
-            return -1
-        print("Set pin {} high".format(pin))
-        return (pin, 1)
-    def setPinLow(self, pin:int):
-        if self.checkPin(pin, "setPinHigh") == -1:
-            return -1
-        print("Set pin {} high".format(pin))
-        return (pin, 0)
-    def setPWM(self, pin, duty_cycle:int, frequency_index:int):
-        if duty_cycle < 1:
-            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer greater than one \n " \
-            "Check if input is negative or a decimal \n If attempting to turn off pwm, use HAL.setPinLow".format(duty_cycle))
-            return -1
-        if frequency_index < 0:
-            print("Error in HAL.setPWM: {} is an invalid frequency index, frequency index cannot be negative".format(frequency_index))
-            return -1
-        if self.checkPin(pin, "setPWM") == -1:
-            return -1
-        print("Set PWM frequency to {0} and duty cycle to {1}".format(self.PWM_FREQUENCY_LIST[frequency_index], duty_cycle))
-        return(pin, duty_cycle, frequency_index)
-    def setDirection(self, direction, pin):
-        if direction == 1:
-            return self.setPinHigh(pin)
-        elif direction == 0:
-            return self.setPinLow(pin)
-        else:
-            print("Error in HAL.setDirection: {} is an invalid direction input".format(direction))
-            return -1
-    def selectDEMUX(self, selection_index, pin0, pin1):
-        match selection_index:
-            case 0:
-                pin0_state = self.setPinLow(pin0)
-                pin1_state = self.setPinLow(pin1)
-                print("Set: {0} low, {1} low".format(pin0, pin1))
-            case 1:
-                pin0_state = self.setPinHigh(pin0)
-                pin1_state = self.setPinLow(pin1)
-                print("Set: {0} high, {1} low".format(pin0, pin1))
-            case 2:
-                pin0_state = self.setPinLow(pin0)
-                pin1_state = self.setPinHigh(pin1)
-                print("Set: {0} low, {1} high".format(pin0, pin1))
-            case 3:
-                pin0_state = self.setPinHigh(pin0)
-                pin1_state = self.setPinHigh(pin1)
-                print("Set: {0} high, {1} high".format(pin0, pin1))
-            case _:
-                print("Error in HAL.selectDEMUX: {} is an invalid selection index, check type or make sure it is in range [0, 3]".format(selection_index))
-                return -1
-        return (pin0_state, pin1_state)
-    def moveStepperMotor(self, step_pin, direction_pin, direction, duty_cycle, frequency_index):
-        direction_state = None
-        if direction_pin is not None:
-            direction_state = self.setDirection(direction, direction_pin)
-        pwm_state = self.setPWM(step_pin, duty_cycle, frequency_index)
-        return (direction_state, pwm_state)
-    def stopStepperMotor(self, step_pin):
-        return self.setPinLow(step_pin)
-    def checkLimitSwitch(self, switch_pin):
-        state = self.pi.read(switch_pin)
-        return state
+@pytest.fixture 
+def hal():
+    return HAL_shell()
+
+def test_setPinHigh(hal):
+    assert hal.setPinHigh(10) == (10, 1), "Setting pin 10 high should yield a value of 1"
+    assert hal.setPinHigh(24) == (24, 1), "Setting pin 24 high should yield a value of 1"
+    assert hal.setPinHigh(0) == -1
+    assert hal.setPinHigh(-1) == -1, "Pin -1 does not exist and should yield the error code -1"
+    assert hal.setPinHigh(26) == -1, "Pin 26 does not exist and should yield the error code -1"
+    assert hal.setPinHigh(0.5) == -1, "Non integer pins are not allowed"
+    assert hal.setPinHigh(1.5) == -1, "Non integer pins are not allowed"
+
+def test_setPinLow(hal):
+    assert hal.setPinLow(10) == (10, 0), "Setting pin 10 low should yield a value of 0"
+    assert hal.setPinLow(24) == (24, 0), "Setting pin 24 low should yield a value of 0"
+    assert hal.setPinLow(-1) == -1, "Pin -1 does not exist and should yield the error code -1"
+    assert hal.setPinLow(26) == -1, "Pin 26 does not exist and should yield the error code -1"
+    assert hal.setPinLow(0.5) == -1, "Non integer pins are not allowed"
+    assert hal.setPinLow(1.5) == -1, "Non integer pins are not allowed"
+
+def test_setPWM(hal):
+    assert hal.setPWM(5, 128, 0) == (5, 128, 0), "Correct PWM parameters"
+    assert hal.setPWM(5, 64, 1) == (5, 128, 1), "Correct PWM parameters"
+    assert hal.setPWM(0, 64, 1) == -1, "Incorrect Pin (zero)"
+    assert hal.setPWM(-1, 64, 1) == -1, "Incorrect Pin (negative)"
+    assert hal.setPWM(3.2, 64, 1) == -1, "Incorrect Pin (non-integer)"
+    assert hal.setPWM(5, 300, 5) == -1, "Incorrect duty cycle (out of range)"
+    assert hal.setPWM(5, 0, 5) == -1, "Incorrect duty cycle (zero)"
+    assert hal.setPWM(5, -8, 5) == -1, "Incorrect duty cycle (negative)"
+    assert hal.setPWM(5, 7.3, 5) == -1, "Incorrect duty cycle (non integer)"
+    assert hal.setPWM(5, 8, -1) == -1, "Incorrect frequency index (negative)"
+    assert hal.setPWM(5, 8, 5.5) == -1, "Incorrect frequency index (non-integer)"
+    assert hal.setPWM(5, 8, 20) == -1, "Incorrect frequency index (out of range)"
+
+def test_setDirection(hal):
+    assert hal.setDirection(0, 5) == (5, 0)
+    assert hal.setDirection(1, 20) == (20, 1)
+    assert hal.setDirection(2, 20) == -1, "Incorrect direction (non boolean)"
+    assert hal.setDirection(-1, 20) == -1, "Incorrect direction (negative)"
+    assert hal.setDirection(2.5, 20) == -1, "Incorrect direction (float)"
+    assert hal.setDirection(1, 0) == -1, "Incorrect pin (zero)"
+    assert hal.setDirection(1, -5) == -1, "Incorrect pin (negative)"
+    assert hal.setDirection(0, 30) == -1, "Incorrect pin (out of range)"
+
+def test_setDEMUX(hal):
+    assert hal.setDEMUX(0, 5, 6) == ((5, 0), (6, 0)), "pin0 low, pin1 low"
+    assert hal.setDEMUX(1, 5, 6) == ((5, 1), (6, 0)), "pin0 high, pin1 low"
+    assert hal.setDEMUX(2, 5, 6) == ((5, 0), (6, 1)), "pin0 low, pin1 high"
+    assert hal.setDEMUX(3, 5, 6) == ((5, 1), (6, 1)), "pin0 high, pin1 high"
+    assert hal.setDEMUX(4, 5, 6) == -1, "index out of range"
+    assert hal.setDEMUX(1, 0, 6) == -1, "pin0 out of range"
+    assert hal.setDEMUX(1, 5, 0) == -1, "pin1 out of range"
+
+def test_moveStepperMotor(hal):
+    freq_index = 3
+    duty_cycle = 128
+    step_pin = 4
+    direction_pin0 = None
+    direction0 = 0
+    direction_pin1 = 10
+    direction1 = 1
+    assert hal.moveStepperMotor(step_pin, direction_pin0, direction0, duty_cycle, freq_index) == (None, (step_pin, duty_cycle, freq_index))
+    assert hal.moveStepperMotor(step_pin, direction_pin1, direction1, duty_cycle, freq_index) == ((direction_pin1, direction1), (step_pin, duty_cycle, freq_index))
+    assert hal.moveStepperMotor(-1, direction_pin0, direction0, duty_cycle, freq_index) == -1, "step pin out of range"
+    assert hal.moveStepperMotor(step_pin, -1, direction0, duty_cycle, freq_index) == -1, "direction pin out of range"
+    assert hal.moveStepperMotor(step_pin, direction_pin0, -1, duty_cycle, freq_index) == -1, "direction val not boolean"
+    assert hal.moveStepperMotor(step_pin, direction_pin0, direction0, -1, freq_index) == -1, "duty cycle out of range"
+    assert hal.moveStepperMotor(step_pin, direction_pin0, direction0, duty_cycle, -1) == -1, "freq index out of range"
+
+def test_stopStepperMotor(hal):
+    assert hal.stopStepperMotor(5) == (5, 0)
+    assert hal.stopStepperMotor(10) == (10, 0)
+    assert hal.stopStepperMotor(30) == -1
+    assert hal.stopStepperMotor(-1) == -1
+    assert hal.stopStepperMotor(3.5) == -1
+
+def test_checkLimitSwitch(hal):
+    assert hal.checkLimitSwitch(0) == 0
+    assert hal.checkLimitSwitch(1) == 1
+    assert hal.checkLimitSwitch(2) == 0
+    assert hal.checkLimitSwitch(3) == 1
+    assert hal.checkLimitSwitch(4) == -1
+    assert hal.checkLimitSwitch(-1) == -1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
