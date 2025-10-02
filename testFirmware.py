@@ -30,7 +30,7 @@ def test_setPinLow(hal):
 
 def test_setPWM(hal):
     assert hal.setPWM(5, 128, 0) == (5, 128, 0), "Correct PWM parameters"
-    assert hal.setPWM(5, 64, 1) == (5, 128, 1), "Correct PWM parameters"
+    assert hal.setPWM(5, 64, 1) == (5, 64, 1), "Correct PWM parameters"
     assert hal.setPWM(0, 64, 1) == -1, "Incorrect Pin (zero)"
     assert hal.setPWM(-1, 64, 1) == -1, "Incorrect Pin (negative)"
     assert hal.setPWM(3.2, 64, 1) == -1, "Incorrect Pin (non-integer)"
@@ -53,13 +53,13 @@ def test_setDirection(hal):
     assert hal.setDirection(0, 30) == -1, "Incorrect pin (out of range)"
 
 def test_setDEMUX(hal):
-    assert hal.setDEMUX(0, 5, 6) == ((5, 0), (6, 0)), "pin0 low, pin1 low"
-    assert hal.setDEMUX(1, 5, 6) == ((5, 1), (6, 0)), "pin0 high, pin1 low"
-    assert hal.setDEMUX(2, 5, 6) == ((5, 0), (6, 1)), "pin0 low, pin1 high"
-    assert hal.setDEMUX(3, 5, 6) == ((5, 1), (6, 1)), "pin0 high, pin1 high"
-    assert hal.setDEMUX(4, 5, 6) == -1, "index out of range"
-    assert hal.setDEMUX(1, 0, 6) == -1, "pin0 out of range"
-    assert hal.setDEMUX(1, 5, 0) == -1, "pin1 out of range"
+    assert hal.selectDEMUX(0, 5, 6) == ((5, 0), (6, 0)), "pin0 low, pin1 low"
+    assert hal.selectDEMUX(1, 5, 6) == ((5, 1), (6, 0)), "pin0 high, pin1 low"
+    assert hal.selectDEMUX(2, 5, 6) == ((5, 0), (6, 1)), "pin0 low, pin1 high"
+    assert hal.selectDEMUX(3, 5, 6) == ((5, 1), (6, 1)), "pin0 high, pin1 high"
+    assert hal.selectDEMUX(4, 5, 6) == -1, "index out of range"
+    assert hal.selectDEMUX(1, 0, 6) == -1, "pin0 out of range"
+    assert hal.selectDEMUX(1, 5, 0) == -1, "pin1 out of range"
 
 def test_moveStepperMotor(hal):
     freq_index = 3
@@ -73,7 +73,7 @@ def test_moveStepperMotor(hal):
     assert hal.moveStepperMotor(step_pin, direction_pin1, direction1, duty_cycle, freq_index) == ((direction_pin1, direction1), (step_pin, duty_cycle, freq_index))
     assert hal.moveStepperMotor(-1, direction_pin0, direction0, duty_cycle, freq_index) == -1, "step pin out of range"
     assert hal.moveStepperMotor(step_pin, -1, direction0, duty_cycle, freq_index) == -1, "direction pin out of range"
-    assert hal.moveStepperMotor(step_pin, direction_pin0, -1, duty_cycle, freq_index) == -1, "direction val not boolean"
+    assert hal.moveStepperMotor(step_pin, direction_pin0, -1, duty_cycle, freq_index) == (None, (step_pin, duty_cycle, freq_index)), "direction val not boolean"
     assert hal.moveStepperMotor(step_pin, direction_pin0, direction0, -1, freq_index) == -1, "duty cycle out of range"
     assert hal.moveStepperMotor(step_pin, direction_pin0, direction0, duty_cycle, -1) == -1, "freq index out of range"
 

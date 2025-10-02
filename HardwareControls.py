@@ -70,15 +70,15 @@ class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     def __init__(self, pi = pigpio.pi()):
         self.pi = pi
-    def checkPin(self, pin, method:str):
+    def checkPin(self, pin, method:str): #TODO raise error if any of these fails
         if type(pin) is not int:
             print("Error in {0}: {1} is an invalid pin, pin value should be an integer".format(method, pin))
             return -1
         if pin <= 0:
             print("Error in {0}: {1} is an invalid pin, pin value should be a natural number".format(method, pin))
             return -1
-        if pin > 25:
-            print("Error in {0}: {1} is an invalid pin, no exposed GPIO pins greater than 25 exist".format(method, pin))
+        if pin > 31:
+            print("Error in {0}: {1} is an invalid pin, no exposed GPIO pins greater than 31 exist".format(method, pin))
             return -1
         else:
             pass
@@ -91,15 +91,24 @@ class HAL(): # Contains basic GPIO commands
             return -1
         self.pi.write(pin, 0)
     def setPWM(self, pin, duty_cycle:int, frequency_index:int):
+        if type(duty_cycle) is not int:
+            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer".format(duty_cycle))
+            return -1
         if duty_cycle < 1:
             print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer greater than one \n " \
             "Check if input is negative or a decimal \n If attempting to turn off pwm, use HAL.setPinLow".format(duty_cycle))
+            return -1
+        if duty_cycle > 255:
+            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer in range [1, 255] \n ".format(duty_cycle))
+        if type(frequency_index) is not int:
+            print("Error in HAL.setPWM: {} is an invalid frequency index, indicices should be integers".format(frequency_index))
             return -1
         if frequency_index < 0:
             print("Error in HAL.setPWM: {} is an invalid frequency index, frequency index cannot be negative".format(frequency_index))
             return -1
         if frequency_index > 18:
             print("Error in HAL.setPWM: {} is an invalid frequency index, no frequency indices greater than 17".format(frequency_index))
+            return -1
         if self.checkPin(pin, "setPWM") == -1:
             return -1
         self.pi.set_PWM_frequency(pin, self.PWM_FREQUENCY_LIST[frequency_index])
@@ -136,6 +145,8 @@ class HAL(): # Contains basic GPIO commands
     def stopStepperMotor(self, step_pin):
         self.setPinLow(step_pin)
     def checkLimitSwitch(self, switch_pin):
+        if self.checkPin(switch_pin, "checkLimitSwitch") == -1:
+            return -1
         try:
             state = self.pi.read(switch_pin)
         except:

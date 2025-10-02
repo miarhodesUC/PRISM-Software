@@ -29,12 +29,24 @@ class HAL_shell():
         return (pin, 0)
     
     def setPWM(self, pin, duty_cycle:int, frequency_index:int):
+        if type(duty_cycle) is not int:
+            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer".format(duty_cycle))
+            return -1
         if duty_cycle < 1:
             print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer greater than one \n " \
             "Check if input is negative or a decimal \n If attempting to turn off pwm, use HAL.setPinLow".format(duty_cycle))
             return -1
+        if duty_cycle > 255:
+            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer in range [1, 255] \n ".format(duty_cycle))
+            return -1
+        if type(frequency_index) is not int:
+            print("Error in HAL.setPWM: {} is an invalid frequency index, indicices should be integers".format(frequency_index))
+            return -1
         if frequency_index < 0:
             print("Error in HAL.setPWM: {} is an invalid frequency index, frequency index cannot be negative".format(frequency_index))
+            return -1
+        if frequency_index > 18:
+            print("Error in HAL.setPWM: {} is an invalid frequency index, no frequency indices greater than 17".format(frequency_index))
             return -1
         if self.checkPin(pin, "setPWM") == -1:
             return -1
@@ -71,6 +83,10 @@ class HAL_shell():
             case _:
                 print("Error in HAL.selectDEMUX: {} is an invalid selection index, check type or make sure it is in range [0, 3]".format(selection_index))
                 return -1
+        if pin0_state == -1:
+            return -1
+        if pin1_state == -1:
+            return -1
         return (pin0_state, pin1_state)
     
     def moveStepperMotor(self, step_pin, direction_pin, direction, duty_cycle, frequency_index):
@@ -88,6 +104,8 @@ class HAL_shell():
         return self.setPinLow(step_pin)
     
     def checkLimitSwitch(self, switch_pin):
+        if switch_pin < 0:
+            return -1
         try:
             state = self.pi[switch_pin]
         except:
