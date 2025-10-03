@@ -1,4 +1,5 @@
 import pigpio
+from pigpio_shell import pigpio_shell as shell
 import csv
 import time
 from numpy import heaviside as u
@@ -68,60 +69,47 @@ class SCodeParse():
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    def __init__(self, pi = pigpio.pi()):
+    def __init__(self, pi=shell()):
         self.pi = pi
-    def checkPin(self, pin, method:str): #TODO raise error if any of these fails
+    def checkPin(self, pin, method):
         if type(pin) is not int:
-            print("Error in {0}: {1} is an invalid pin, pin value should be an integer".format(method, pin))
-            return -1
-        if pin <= 0:
-            print("Error in {0}: {1} is an invalid pin, pin value should be a natural number".format(method, pin))
-            return -1
+            raise TypeError("checkPin error in {0}, {1} is not an integer".format(method, pin))
         if pin > 31:
-            print("Error in {0}: {1} is an invalid pin, no exposed GPIO pins greater than 31 exist".format(method, pin))
-            return -1
-        else:
-            pass
+            raise ValueError("checkPin error in {0}, {1} is greater than 31".format(method, pin))
+        if pin < 0:
+            raise ValueError("checkPin error in {0}, {1} is negative".format(method, pin))
     def setPinHigh(self, pin:int):
-        if self.checkPin(pin, "setPinHigh") == -1:
-            return -1
+        self.checkPin(pin, "setPinHigh")
         self.pi.write(pin, 1)
     def setPinLow(self, pin:int):
-        if self.checkPin(pin, "setPinLow") == -1:
-            return -1
+        self.checkPin(pin, "setPinLow")
         self.pi.write(pin, 0)
     def setPWM(self, pin, duty_cycle:int, frequency_index:int):
-        if type(duty_cycle) is not int:
-            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer".format(duty_cycle))
-            return -1
-        if duty_cycle < 1:
-            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer greater than one \n " \
-            "Check if input is negative or a decimal \n If attempting to turn off pwm, use HAL.setPinLow".format(duty_cycle))
-            return -1
-        if duty_cycle > 255:
-            print("Error in HAL.setPWM: {} is an invalid duty cycle, duty cycle should be an integer in range [1, 255] \n ".format(duty_cycle))
+        self.checkPin(pin, "setPWM")
         if type(frequency_index) is not int:
             print("Error in HAL.setPWM: {} is an invalid frequency index, indicices should be integers".format(frequency_index))
-            return -1
+            raise TypeError
         if frequency_index < 0:
             print("Error in HAL.setPWM: {} is an invalid frequency index, frequency index cannot be negative".format(frequency_index))
-            return -1
+            raise ValueError
         if frequency_index > 18:
             print("Error in HAL.setPWM: {} is an invalid frequency index, no frequency indices greater than 17".format(frequency_index))
-            return -1
-        if self.checkPin(pin, "setPWM") == -1:
-            return -1
+            raise ValueError
         self.pi.set_PWM_frequency(pin, self.PWM_FREQUENCY_LIST[frequency_index])
         self.pi.set_PWM_dutycycle(pin, duty_cycle)
     def setDirection(self, direction, pin):
+        self.checkPin(pin, "setDirection")
         if direction == 1:
             self.setPinHigh(pin)
         elif direction == 0:
             self.setPinLow(pin)
         else:
-            print("Error in HAL.setDirection: {} is an invalid direction input".format(direction))
-            return -1
+            raise ValueError("Error in HAL.setDirection: {} is an invalid direction input".format(direction))
     def selectDEMUX(self, selection_index, pin0, pin1):
+        if pin0 == pin1:
+            raise ValueError("Error in HAL.select DEMUX: pin0 = {0} = pin1 = {1}".format(pin0, pin1))
+        self.checkPin(pin0, "selectDEMUX - pin0")
+        self.checkPin(pin1, "selectDEMUX - pin1")
         match selection_index:
             case 0:
                 self.setPinLow(pin0)
@@ -136,22 +124,17 @@ class HAL(): # Contains basic GPIO commands
                 self.setPinHigh(pin0)
                 self.setPinHigh(pin1)
             case _:
-                print("Error in HAL.selectDEMUX: {} is an invalid selection index, check type or make sure it is in range [0, 3]".format(selection_index))
-                return -1
+                raise ValueError("Error in HAL.selectDEMUX: {} is an invalid selection index, check type or make sure it is in range [0, 3]".format(selection_index))
     def moveStepperMotor(self, step_pin, direction_pin, direction, duty_cycle, frequency_index):
+        if step_pin == direction_pin:
+            raise ValueError("Error in HAL.moveStepperMotor: step_pin = {0} = direction_pin = {1}".format(step_pin, direction_pin))
         if direction_pin is not None:
             self.setDirection(direction, direction_pin)
         self.setPWM(step_pin, duty_cycle, frequency_index)
     def stopStepperMotor(self, step_pin):
         self.setPinLow(step_pin)
-    def checkLimitSwitch(self, switch_pin):
-        if self.checkPin(switch_pin, "checkLimitSwitch") == -1:
-            return -1
-        try:
-            state = self.pi.read(switch_pin)
-        except:
-            print("Pin {} does not exist".format(switch_pin))
-            return -1
+    def checkLimitSwitch(self, switch_pin):  
+        state = self.pi.read(switch_pin)
         return state
 
 class MotorSolenoid():
@@ -182,6 +165,7 @@ class MotorSolenoid():
 
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 0
+    VALVE_FREQUENCY_INDEX = 1
     # CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 1
@@ -203,6 +187,8 @@ class MotorSolenoid():
                 self.setLocomotiveSelect(3)
             case 'Idle':
                 self.setLocomotiveSelect(0)
+            case _:
+                raise ValueError("Error in moveMotor: {} is an invalid axis".format(axis))
         time_value_s = abs(distance_value) / (self.STEP_MODE_VALUE * 
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
@@ -253,7 +239,13 @@ class MotorSolenoid():
         self.setPeristalticSelect(pump)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
-        self.moveStop(self.PERISTALTIC_STEP_PIN)
+        self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN)
+    def openValve(self):
+        self.hal.setPinHigh(self.SOLENOID_PIN)
+    def closeValve(self):
+        self.hal.setPinLow(self.SOLENOID_PIN)
+    def pwmValve(self, pwm_value):
+        self.hal.setPWM(self.SOLENOID_PIN, pwm_value, self.VALVE_FREQUENCY_INDEX)
 
 class I2C():
     I2C_BUS = 1
