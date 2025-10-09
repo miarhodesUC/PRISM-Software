@@ -144,10 +144,11 @@ class HAL(): # Contains basic GPIO commands
         if direction_pin is not None:
             self.setDirection(direction, direction_pin)
         self.setPWM(step_pin, duty_cycle, frequency_index)
-    def stopStepperMotor(self, step_pin):
+    def stopStepperMotor(self, step_pin, direction_pin):
         self.setPinLow(step_pin)
+        self.setPinLow(direction_pin)
     def checkLimitSwitch(self, switch_pin):  
-        state = int(u(self.pi.read(switch_pin)[0], 0))
+        state = int(u(self.pi.read(switch_pin), 0))
         return state
 
 class MotorSolenoid():
@@ -205,9 +206,9 @@ class MotorSolenoid():
         time_value_s = abs(distance_value) / (self.STEP_MODE_VALUE * 
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
-                                  u(distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
+                                  u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         time.sleep(time_value_s)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str):
         match axis:
             case 'X':
@@ -229,7 +230,7 @@ class MotorSolenoid():
                 while state == 0:
                     state = self.hal.checkLimitSwitch(switch_pin)
                     if state == 1:
-                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
                 self.setLocomotiveSelect(2)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
@@ -237,7 +238,7 @@ class MotorSolenoid():
                 while state == 0:
                     state = self.hal.checkLimitSwitch(switch_pin)
                     if state == 1:
-                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
                 return 0
             case _:
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
@@ -249,16 +250,16 @@ class MotorSolenoid():
             count += 1
             state = self.hal.checkLimitSwitch(switch_pin)
             if state == 1:
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             if count > 1000:
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
                 state = 1
                 raise TimeoutError("Homing sequence expired")
     def pumpOn(self, pump):
         self.setPeristalticSelect(pump)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
-        self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN)
+        self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
     def openValve(self):
         self.hal.setPinHigh(self.SOLENOID_PIN)
     def closeValve(self):
