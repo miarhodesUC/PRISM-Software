@@ -19,7 +19,7 @@ def test_env():
          ['MOVE', 'X10'],
          ['MOVE', 'Y5'],
          ['VALV', 'On'],
-         ['PUMP', '3'],
+         ['PUMP', '2'],
          ['MOVE', 'T200'],
          ['PUMP', 'Off'],
          ['VALV', 'Off'],
