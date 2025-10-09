@@ -150,24 +150,12 @@ class HAL(): # Contains basic GPIO commands
     def checkLimitSwitch(self, switch_pin):  
         state = int(u(self.pi.read(switch_pin), 0))
         return state
+    def setAsInput(self, pin):
+        self.pi.set_mode(pin, pigpio.INPUT)
+    def setAsOutput(self, pin):
+        self.pi.set_mode(pin, pigpio.OUTPUT)
 
 class MotorSolenoid():
-    # place constants here for pin allocation
-    X_SWITCH_PIN = 20
-    Y_SWITCH_PIN = 21
-    SOLENOID_PIN = 4
-    #LOCOMOTIVE MOTORS
-    LOCOMOTIVE_DIRECTION_PIN = 17
-    LOCOMOTIVE_STEP_PIN = 18
-    LOCOMOTIVE_SELECT_HIGHBIT = 27
-    LOCOMOTIVE_SELECT_LOWBIT = 22
-
-    #Select values| 00: no motor | 01: motor X | 10: motor Y | 11: motor T
-    #PERISTALTIC MOTORS
-    PERISTALTIC_STEP_PIN = 13
-    PERISTALTIC_SELECT_HIGHBIT = 6
-    PERISTALTIC_SELECT_LOWBIT = 5
-    
     #DIRECTION
     DIRECTION_POSITIVE = 1
     DIRECTION_NEGATIVE = 0
@@ -180,13 +168,36 @@ class MotorSolenoid():
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 0
     VALVE_FREQUENCY_INDEX = 1
-    # CONFIGS (Replace when values have been found)
+    # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 1
     DISTANCE_PER_STEP = 1
     VOLUME_PER_STEP = 1
+
+    # PIN CONFIGS
+
+    #INPUTS
+    X_SWITCH_PIN = 23
+    Y_SWITCH_PIN = 24
+
+    #SOLENOID
+    SOLENOID_PIN = 4
+    #LOCOMOTIVE MOTORS
+    LOCOMOTIVE_DIRECTION_PIN = 17
+    LOCOMOTIVE_STEP_PIN = 18
+    LOCOMOTIVE_SELECT_HIGHBIT = 27
+    LOCOMOTIVE_SELECT_LOWBIT = 22
+
+    #Select values| 00: no motor | 01: motor X | 10: motor Y | 11: motor T
+    #PERISTALTIC MOTORS
+    PERISTALTIC_STEP_PIN = 13
+    PERISTALTIC_SELECT_HIGHBIT = 6
+    PERISTALTIC_SELECT_LOWBIT = 5
+
     def __init__(self, hal = HAL()):
         self.hal = hal
+        hal.setAsInput(self.X_SWITCH_PIN)
+        hal.setAsInput(self.Y_SWITCH_PIN)
     def setLocomotiveSelect(self, axis:int):
         self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
     def setPeristalticSelect(self, pump:int):
