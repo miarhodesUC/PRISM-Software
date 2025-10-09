@@ -11,6 +11,9 @@ class SCodeParse():
         self.filename = filename
         self.command_vector = []
         self.motor_solenoid = MotorSolenoid
+    def startSequence(self):
+        self.splitFile()
+        self.mneumonicMatch()
     def splitFile(self):
         with open(self.filename, "r") as file:
             content = csv.reader(file)
@@ -38,45 +41,60 @@ class SCodeParse():
                     print("Error in mneumonicMatch: invalid mneumonic {0} on line {1}".format(mneumonic, line_number))             
     def commandHOME(self, state):
         self.motor_solenoid.homeMotor(state)
+        print(f"Homing {state}")
     def commandMOVE(self, state):
         try: 
             distance_value = int(state[1:])
         except:
             raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
-        self.motor_solenoid.moveMotor(distance_value, state[0])     
+        self.motor_solenoid.moveMotor(distance_value, state[0])
+        print(f"Moving motor {state[0]} for {distance_value} units")     
     def commandPUMP(self, state):
         match state:
             case 'Off':
                 self.motor_solenoid.pumpOff()
+                print("Pumps off")
             case _:
                 pump_index = int(state)
                 self.motor_solenoid.pumpOn(pump_index)
+                print("Pump {pump_index} on")
     def commandVALV(self, state):
         match state:
             case "On":
                 self.motor_solenoid.openValve()
+                print("Opening air compressor valve")
             case "Off":
                 self.motor_solenoid.closeValve()
+                print("Closing air compressor valve")
             case _:
                 duty_cycle = int(state)
                 self.motor_solenoid.pwmValve(duty_cycle)
+                print(f"Modulating air compressor at {duty_cycle/255}")
 
-class HAL_shell():
+# this was for making sure SCodeParse works as intended
+class motor_solenoid_shell():
     def __init__(self):
         pass
     def homeMotor(self, state):
+        print(f"Home {state}")
         return state
     def moveMotor(self, distance_value, state):
+        print(f"moveMotor Distance: {distance_value}, State: {state}")
         return [distance_value, state]
     def pumpOn(self, index):
+        print(f"pump Index: {index}")
         return index
     def pumpOff(self):
+        print("Pump Off")
         return 'Off'
     def openValve(self):
+        print("Valve On")
         return 'On'
     def closeValve(self):
+        print("Valve off")
         return 'Off'
     def pwmValve(self, pwm_val):
+        print(f"Pwm val {pwm_val}")
         return pwm_val
 
 
@@ -156,6 +174,12 @@ class HAL(): # Contains basic GPIO commands
     def setAsOutput(self, pin):
         self.pi.set_mode(pin, pigpio.OUTPUT)
 
+# NO TOUCH, I MEAN IT MIA
+# YES YOU, I MEAN YOU FUTURE MIA, I KNOW YOU ARE GOING TO TRY TO TWEAK SOMETHING
+# IF YOU *REALLY* NEED TO CHANGE SOMETHING, MAKE A COPY OF THE FILE AND CHANGE IT THEIR
+# YES, I KNOW WE HAVE VERSION CONTROL, I DON'T CARE, WE SPENT WAY TOO LONG MAKING THIS WORK
+# if it, uh, turns out I left some bugs though, you can fix them I guess
+# also you're allowed to actually add the HOME ALL feature BUT THAT'S IT
 class MotorSolenoid():
     #DIRECTION
     DIRECTION_POSITIVE = 0
@@ -234,7 +258,7 @@ class MotorSolenoid():
                 # switch_pin = self.T_SWITCH_PIN
                 print("Homing T not yet implemented")
                 return 0
-            case 'All':
+            case 'ALL':
                 self.setLocomotiveSelect(1)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)

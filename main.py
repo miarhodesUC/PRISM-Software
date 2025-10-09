@@ -9,11 +9,26 @@ import time
 from numpy import heaviside as u
 from HardwareControls import HAL, MotorSolenoid, SCodeParse
 
+def generateTestFile(file_name, save_vector):
+    with open(file_name, "w", newline="") as file:
+            writer = csv.writer(file)
+            for row in save_vector:
+                writer.writerow(row)
+            print(f"Data saved to {file_name}")
+
 def main():
-    test = MotorSolenoid(HAL())
-    time_seconds = 5
-    time_periods = time_seconds * 10
-    test.moveMotor(time_periods, 'X')
+    generateTestFile("testfile.csv",[
+         ['HOME', 'X'],
+         ['MOVE', 'X50'],
+         ['MOVE', 'Y50'],
+         ['VALV', 'On'],
+         ['PUMP', '3'],
+         ['MOVE', 'T50'],
+         ['PUMP', 'Off'],
+         ['VALV', 'Off'],
+    ])
+    parser = SCodeParse("testfile.csv", MotorSolenoid(HAL(pigpio.pi())))
+    parser.startSequence()
 
 if __name__ == "__main__":
     main()
