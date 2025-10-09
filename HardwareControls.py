@@ -158,8 +158,8 @@ class HAL(): # Contains basic GPIO commands
 
 class MotorSolenoid():
     #DIRECTION
-    DIRECTION_POSITIVE = 1
-    DIRECTION_NEGATIVE = 0
+    DIRECTION_POSITIVE = 0
+    DIRECTION_NEGATIVE = 1
 
     # Duty cycle
     DUTY_CYCLE_HALF = 128
