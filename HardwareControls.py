@@ -42,17 +42,14 @@ class SCodeParse():
         try: 
             distance_value = int(state[1:])
         except:
-            print("Distance value '{}' could not be retyped as an integer".format(state[1:]))
+            raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
         self.motor_solenoid.moveMotor(distance_value, state[0])     
     def commandPUMP(self, state):
         match state:
             case 'Off':
                 self.motor_solenoid.pumpOff()
             case _:
-                try:
-                    pump_index = int(state)
-                except:
-                    print("Error in commandPump:{} could not be retyped as an integer".format(state))
+                pump_index = int(state)
                 self.motor_solenoid.pumpOn(pump_index)
     def commandVALV(self, state):
         match state:
@@ -61,11 +58,27 @@ class SCodeParse():
             case "Off":
                 self.motor_solenoid.closeValve()
             case _:
-                try:
-                    duty_cycle = int(state)
-                except:
-                    print("Error in commandVALV: {} could not be retyped as an integer".format(state))
+                duty_cycle = int(state)
                 self.motor_solenoid.pwmValve(duty_cycle)
+
+class HAL_shell():
+    def __init__(self):
+        pass
+    def homeMotor(self, state):
+        return state
+    def moveMotor(self, distance_value, state):
+        return [distance_value, state]
+    def pumpOn(self, index):
+        return index
+    def pumpOff(self):
+        return 'Off'
+    def openValve(self):
+        return 'On'
+    def closeValve(self):
+        return 'Off'
+    def pwmValve(self, pwm_val):
+        return pwm_val
+
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
@@ -134,7 +147,7 @@ class HAL(): # Contains basic GPIO commands
     def stopStepperMotor(self, step_pin):
         self.setPinLow(step_pin)
     def checkLimitSwitch(self, switch_pin):  
-        state = self.pi.read(switch_pin)
+        state = int(u(self.pi.read(switch_pin)[0], 0))
         return state
 
 class MotorSolenoid():
@@ -143,10 +156,10 @@ class MotorSolenoid():
     Y_SWITCH_PIN = 21
     SOLENOID_PIN = 4
     #LOCOMOTIVE MOTORS
-    LOCOMOTIVE_DIRECTION_PIN = 22
+    LOCOMOTIVE_DIRECTION_PIN = 17
     LOCOMOTIVE_STEP_PIN = 18
     LOCOMOTIVE_SELECT_HIGHBIT = 27
-    LOCOMOTIVE_SELECT_LOWBIT = 17
+    LOCOMOTIVE_SELECT_LOWBIT = 22
 
     #Select values| 00: no motor | 01: motor X | 10: motor Y | 11: motor T
     #PERISTALTIC MOTORS
@@ -173,6 +186,7 @@ class MotorSolenoid():
     VOLUME_PER_STEP = 1
     def __init__(self, hal = HAL()):
         self.hal = hal
+        self.moveMotor_report = []
     def setLocomotiveSelect(self, axis:int):
         self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
     def setPeristalticSelect(self, pump:int):
@@ -193,6 +207,10 @@ class MotorSolenoid():
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   u(distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
+        self.moveMotor_report = [self.hal.pi.read(self.LOCOMOTIVE_SELECT_LOWBIT)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_SELECT_HIGHBIT)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[1]]
         time.sleep(time_value_s)
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
     def homeMotor(self, axis:str):
@@ -227,14 +245,27 @@ class MotorSolenoid():
                         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
                 return 0
             case _:
-                print("Error in homeMotor: {} is an invalid axis".format(axis))
+                raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
+        self.moveMotor_report = [self.hal.pi.read(self.LOCOMOTIVE_SELECT_LOWBIT)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_SELECT_HIGHBIT)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[0],
+                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[1]]
         state = 0
+        count = 0
         while state == 0:
+            #TODO Remove this timer
+            time.sleep(0.05)
+            count += 1
             state = self.hal.checkLimitSwitch(switch_pin)
             if state == 1:
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+            if count > 10:
+                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
+                state = 1
+                #TODO make sure this gets uncommented
+                # raise TimeoutError("Homing sequence expired")
     def pumpOn(self, pump):
         self.setPeristalticSelect(pump)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)

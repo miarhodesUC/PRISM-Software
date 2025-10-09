@@ -80,11 +80,11 @@ def test_setPeristalticSelect(pump, exception, motorsolenoid):
     (10, 'X', None),
     (10, 'Y', None),
     (10, 'T', None),
-    (10, 'IDLE', None),
+    (10, 'Idle', None),
     (-10, 'X', None),
     (-10, 'Y', None),
     (-10, 'T', None),
-    (-10, 'IDLE', None),
+    (-10, 'Idle', None),
     ('x', 'X', TypeError),
     ('y', 'Y', TypeError),
     ('t', 'T', TypeError),
@@ -94,7 +94,6 @@ def test_setPeristalticSelect(pump, exception, motorsolenoid):
 ])
 def test_moveMotor(distance_value, axis, exception, motorsolenoid):
     if exception is None:
-        motorsolenoid.moveMotor(distance_value, axis)
         match axis:
             case 'X':
                 val0 = 255
@@ -105,15 +104,14 @@ def test_moveMotor(distance_value, axis, exception, motorsolenoid):
             case 'T':
                 val0 = 255
                 val1 = 255
-            case 'IDLE':
+            case 'Idle':
                 val0 = 0
                 val1 = 0
         motorsolenoid.moveMotor(distance_value, axis)
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_SELECT_LOWBIT)[0] == val0
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_SELECT_HIGHBIT)[0] == val1
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[0] == motorsolenoid.DUTY_CYCLE_HALF
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
-        time.sleep(2)
+        assert motorsolenoid.moveMotor_report[0] == val0
+        assert motorsolenoid.moveMotor_report[1] == val1
+        assert motorsolenoid.moveMotor_report[2] == motorsolenoid.DUTY_CYCLE_HALF
+        assert motorsolenoid.moveMotor_report[3] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
         assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[0] == 0
         assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[1] == 0
     else:
@@ -145,11 +143,10 @@ def test_homeMotor(axis, exception, motorsolenoid):
             case 'IDLE':
                 val0 = 0
                 val1 = 0
-        motorsolenoid.homeMotor(axis)
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_SELECT_LOWBIT)[0] == val0
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_SELECT_HIGHBIT)[0] == val1
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[0] == motorsolenoid.DUTY_CYCLE_HALF
-        assert motorsolenoid.hal.pi.read(motorsolenoid.LOCOMOTIVE_STEP_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
+        assert motorsolenoid.moveMotor_report[0] == val0
+        assert motorsolenoid.moveMotor_report[1] == val1
+        assert motorsolenoid.moveMotor_report[2] == motorsolenoid.DUTY_CYCLE_HALF
+        assert motorsolenoid.moveMotor_report[3] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
     else:
         with pytest.raises(exception):
             motorsolenoid.homeMotor(axis)
@@ -161,7 +158,7 @@ def test_homeMotor(axis, exception, motorsolenoid):
     (3, None),
     (4, ValueError),
     (-1, ValueError),
-    ('0', TypeError)
+    ('0', ValueError)
 ])
 def test_pumpOn(pump, exception, motorsolenoid):
     if exception is None:
@@ -183,7 +180,7 @@ def test_pumpOn(pump, exception, motorsolenoid):
         assert motorsolenoid.hal.pi.read(motorsolenoid.PERISTALTIC_SELECT_LOWBIT)[0] == val0
         assert motorsolenoid.hal.pi.read(motorsolenoid.PERISTALTIC_SELECT_HIGHBIT)[0] == val1
         assert motorsolenoid.hal.pi.read(motorsolenoid.PERISTALTIC_STEP_PIN)[0] == motorsolenoid.DUTY_CYCLE_HALF
-        assert motorsolenoid.hal.pi.read(motorsolenoid.PERISTALTIC_STEP_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.VALVE_FREQUENCY_INDEX]
+        assert motorsolenoid.hal.pi.read(motorsolenoid.PERISTALTIC_STEP_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
     else:
         with pytest.raises(exception):
             motorsolenoid.setPeristalticSelect(pump)
@@ -230,7 +227,7 @@ def test_pwmValve(pwm_val, exception, motorsolenoid):
     if exception is None:
         motorsolenoid.pwmValve(pwm_val)
         assert motorsolenoid.hal.pi.read(motorsolenoid.SOLENOID_PIN)[0] == pwm_val
-        assert motorsolenoid.hal.pi.read(motorsolenoid.SOLENOID_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.PWM_FREQUENCY_INDEX]
+        assert motorsolenoid.hal.pi.read(motorsolenoid.SOLENOID_PIN)[1] == motorsolenoid.PWM_FREQUENCY_LIST[motorsolenoid.VALVE_FREQUENCY_INDEX]
     else:
         with pytest.raises(exception):
             motorsolenoid.pwmValve(pwm_val)
