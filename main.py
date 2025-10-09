@@ -19,16 +19,16 @@ def generateTestFile(file_name, save_vector):
 def main():
     generateTestFile("testfile.csv",[
          ['HOME', 'X'],
-         ['MOVE', 'X50'],
-         ['MOVE', 'Y50'],
-         ['VALV', 'On'],
+         ['HOME', 'Y'],
+         ['MOVE', 'X40'],
+         ['MOVE', 'Y30'],
          ['PUMP', '3'],
+         ['VALV', '128'],
          ['MOVE', 'T50'],
          ['PUMP', 'Off'],
          ['VALV', 'Off'],
     ])
     parser = SCodeParse("testfile.csv", MotorSolenoid(HAL(pigpio.pi())))
     parser.startSequence()
-
 if __name__ == "__main__":
     main()
