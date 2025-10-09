@@ -22,7 +22,7 @@ def main():
          ['HOME', 'Y'],
          ['MOVE', 'X40'],
          ['MOVE', 'Y30'],
-         ['PUMP', '3'],
+         ['PUMP', '2'],
          ['VALV', '128'],
          ['MOVE', 'T50'],
          ['PUMP', 'Off'],
