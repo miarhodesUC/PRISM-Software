@@ -186,7 +186,6 @@ class MotorSolenoid():
     VOLUME_PER_STEP = 1
     def __init__(self, hal = HAL()):
         self.hal = hal
-        self.moveMotor_report = []
     def setLocomotiveSelect(self, axis:int):
         self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
     def setPeristalticSelect(self, pump:int):
@@ -207,10 +206,6 @@ class MotorSolenoid():
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   u(distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-        self.moveMotor_report = [self.hal.pi.read(self.LOCOMOTIVE_SELECT_LOWBIT)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_SELECT_HIGHBIT)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[1]]
         time.sleep(time_value_s)
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
     def homeMotor(self, axis:str):
@@ -248,10 +243,6 @@ class MotorSolenoid():
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
         self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-        self.moveMotor_report = [self.hal.pi.read(self.LOCOMOTIVE_SELECT_LOWBIT)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_SELECT_HIGHBIT)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[0],
-                                 self.hal.pi.read(self.LOCOMOTIVE_STEP_PIN)[1]]
         state = 0
         count = 0
         while state == 0:
