@@ -2,24 +2,18 @@ import numpy
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt5.QtGui import QIcon, QFont, QPixmap
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("GUI")
-        self.setGeometry(1024, 600)
-    def setupUI(self):
-        label = QLabel()   
-
-
-
+import pigpio
+from pigpio_shell import pigpio_shell as shell
+import csv
+import time
+from numpy import heaviside as u
+from HardwareControls import HAL, MotorSolenoid, SCodeParse
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    test = MotorSolenoid(HAL())
+    time_seconds = 5
+    time_periods = time_seconds * 10
+    test.moveMotor(time_periods, 'X')
 
 if __name__ == "__main__":
     main()

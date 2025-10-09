@@ -82,7 +82,7 @@ class HAL_shell():
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    def __init__(self, pi=shell()):
+    def __init__(self, pi=pigpio.pi()):
         self.pi = pi
     def checkPin(self, pin, method):
         if type(pin) is not int:
@@ -255,17 +255,14 @@ class MotorSolenoid():
         state = 0
         count = 0
         while state == 0:
-            #TODO Remove this timer
-            time.sleep(0.05)
             count += 1
             state = self.hal.checkLimitSwitch(switch_pin)
             if state == 1:
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
-            if count > 10:
+            if count > 1000:
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN)
                 state = 1
-                #TODO make sure this gets uncommented
-                # raise TimeoutError("Homing sequence expired")
+                raise TimeoutError("Homing sequence expired")
     def pumpOn(self, pump):
         self.setPeristalticSelect(pump)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
