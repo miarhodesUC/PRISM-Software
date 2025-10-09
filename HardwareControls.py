@@ -149,6 +149,7 @@ class HAL(): # Contains basic GPIO commands
         self.setPinLow(direction_pin)
     def checkLimitSwitch(self, switch_pin):  
         state = int(u(self.pi.read(switch_pin), 0))
+        print(state)
         return state
     def setAsInput(self, pin):
         self.pi.set_mode(pin, pigpio.INPUT)
@@ -262,7 +263,7 @@ class MotorSolenoid():
             state = self.hal.checkLimitSwitch(switch_pin)
             if state == 1:
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
-            if count > 1000:
+            if count > 1000000:
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
                 state = 1
                 raise TimeoutError("Homing sequence expired")
