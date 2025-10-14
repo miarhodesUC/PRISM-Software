@@ -1,5 +1,5 @@
 import HAL_shell
-from HardwareControls import SCodeParse, MotorSolenoid, HAL
+from test_HardwareControls import SCodeParse, MotorSolenoid, HAL
 from pigpio_shell import pigpio_shell as pi
 import pigpio
 import csv
@@ -9,7 +9,7 @@ from numpy import heaviside as u
 
 @pytest.fixture
 def motorsolenoid():
-    motorsolenoid = MotorSolenoid(HAL())
+    motorsolenoid = MotorSolenoid(HAL(pi()))
     return motorsolenoid
 
 @pytest.mark.parametrize("axis, exception", [

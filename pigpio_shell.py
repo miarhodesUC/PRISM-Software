@@ -7,6 +7,8 @@ class pigpio_shell():
     def __init__(self):
         self.pinout = self.PIN_ARRAY
         self.freq_ref = self.PWM_FREQUENCY_LIST
+    def set_mode(x, y, z):
+        return x, y, z
     def write(self, pin, state_bool):
         if type(pin) is not int:
             raise TypeError("Error in write: pin {} invalid, must be int".format(pin))

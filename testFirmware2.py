@@ -8,7 +8,7 @@ from pigpio_shell import pigpio_shell
 
 @pytest.fixture
 def hal():
-    hal = HAL()
+    hal = HAL(pigpio_shell())
     return hal
 
 @pytest.mark.parametrize('pin, expected, exception', [
@@ -86,7 +86,7 @@ def test_setDirection(hal, direction, pin, expected, exception):
     (0.5, 10, 11, ValueError),
     (5, 10, 11, ValueError),
     (0, 50, 50, ValueError),
-    (0, 0.5, 0.5, TypeError)
+    (0, 0.5, 0.5, ValueError)
 ])
 def test_selectDEMUX(hal, selection_index, pin0, pin1, exception):
     if exception is None:

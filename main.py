@@ -26,7 +26,7 @@ def main():
          ['VALV', '128'],
          ['MOVE', 'T50'],
          ['PUMP', 'Off'],
-         ['VALV', 'Off'],
+         ['VALV', 'Off']
     ])
     parser = SCodeParse("testfile.csv", MotorSolenoid(HAL(pigpio.pi())))
     parser.startSequence()
