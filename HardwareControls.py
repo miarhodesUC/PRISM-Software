@@ -182,6 +182,8 @@ class HAL(): # Contains basic GPIO commands
 # YES, I KNOW WE HAVE VERSION CONTROL, I DON'T CARE, WE SPENT WAY TOO LONG MAKING THIS WORK
 # if it, uh, turns out I left some bugs though, you can fix them I guess
 # also you're allowed to actually add the HOME ALL feature BUT THAT'S IT
+# To past mia: girl you forgot that if pressurized air is allowed into every nozzle, all of them will spray
+# actually never mind
 class MotorSolenoid():
     #DIRECTION
     DIRECTION_POSITIVE = 0
@@ -209,6 +211,8 @@ class MotorSolenoid():
 
     #SOLENOID
     SOLENOID_PIN = 25
+    SOLENOID_SELECT_LOWBIT = 26
+    SOLENOID_SELECT_HIGHBIT = 16
     #LOCOMOTIVE MOTORS
     LOCOMOTIVE_DIRECTION_PIN = 17
     LOCOMOTIVE_STEP_PIN = 18
@@ -227,7 +231,7 @@ class MotorSolenoid():
         hal.setAsInput(self.Y_SWITCH_PIN)
     def setLocomotiveSelect(self, axis:int):
         self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
-    def setPeristalticSelect(self, pump:int):
+    def setPeristalticSelect(self, pump:int): #we can just mouch off of this mux to select the solenoid, ohoho, delightfully devilish mia
         self.hal.selectDEMUX(pump, self.PERISTALTIC_SELECT_LOWBIT, self.PERISTALTIC_SELECT_HIGHBIT)
     def moveMotor(self, distance_value, axis:str):
         match axis:
