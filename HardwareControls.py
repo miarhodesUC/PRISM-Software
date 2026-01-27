@@ -194,8 +194,8 @@ class Solenoid():
         else:
             print("WARNING: Limit switch triggered")
             self.shutdown()
-    def setReservoirSelect(self, valve:int): # internal tooling for selecting coating solution
-        self.hal.selectDEMUX(valve, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
+    def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
+        self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
     def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
         match axis:
             case 'X':
@@ -212,7 +212,7 @@ class Solenoid():
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
         self.hal.moveStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-        time.sleep(time_value_s)
+        time.sleep(time_value_s) # there's probably a better way to do this
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
         self.homing = True
@@ -264,17 +264,16 @@ class Solenoid():
                 state = 1
                 self.homing = False
                 raise TimeoutError("Homing sequence expired")
-    def pumpOn(self, reservoir): #
-        self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
+    def pumpOn(self):
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
         self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
     def openAirValve(self):
-        self.hal.setPinHigh(self.SOLENOID_PIN)
+        self.hal.setPinHigh(self.AIR_VALVE_PIN)
     def closeAirValve(self):
-        self.hal.setPinLow(self.SOLENOID_PIN)
+        self.hal.setPinLow(self.AIR_VALVE_PIN)
     def pwmAirValve(self, pwm_value):
-        self.hal.setPWM(self.SOLENOID_PIN, pwm_value, self.VALVE_FREQUENCY_INDEX)
+        self.hal.setPWM(self.AIR_VALVE_PIN, pwm_value, self.VALVE_FREQUENCY_INDEX)
     def shutdown(self):
         self.closeAirValve()
         self.pumpOff()
@@ -333,11 +332,16 @@ class GRBLDriver(GrblStreamer):
         print(f"ERROR: {line}")
 
 class SCodeParse():
+    # Pathing method
     GRBL_MODE = 1
     CUSTOM_MODE = 0
     CURRENT_MODE = 0
-    def __init__(self, gcode_file : str, coating_routine : str, Solenoid = Solenoid(), GRBLDriver = GRBLDriver('/dev/ttyUSB0')):
-        self.gcode = gcode_file
+
+    # Fluid handling configs
+    PURGE_TIME = 10 #dummy value
+    FLUID_LATENCY = 10 #dummy value
+    def __init__(self, path_file : str, coating_routine : str, Solenoid = Solenoid(), GRBLDriver = GRBLDriver('/dev/ttyUSB0')):
+        self.path = path_file
         self.routine = coating_routine
         self.command_vector = []
         self.gcode_vector = []
@@ -351,16 +355,16 @@ class SCodeParse():
                 for cycle_index in range(self.cycle_count):
                     for step_index in range(self.step_count):
                         self.startSpraying(step_index)
-                        self.grbl.send_file(self.gcode)
+                        self.grbl.send_file(self.path)
                         self.shutdown()
                         self.grbl.write_line("$H") # TODO: Reconfigure config.h on GRBL controller to only home x and y
                 self.grbl.close()
             case(self.CUSTOM_MODE):
-                self.splitFile()
+                self.splitFile(self.path)
+                self.loadCoatCycle()
                 self.mneumonicMatch()
             case _:
-                raise ValueError
-                
+                raise ValueError("Unknown pathing configuration, check class SCodeParse in HardwareControls.py")
     def loadCoatCycle(self):
         coat_vector = []
         with open(self.routine, "r") as file:
@@ -374,19 +378,9 @@ class SCodeParse():
         self.arr_reservoir = coat_vector[0]
         self.arr_coat_count = coat_vector[1]
         print("under construction")
-    def executePathing(self):
-        pass
-    def startSpraying(self, step_index):
-        self.motor_solenoid.pumpOn(self.arr_reservoir[step_index])
-        self.motor_solenoid.openAirValve()
 
-    def shutdown(self):
-        self.motor_solenoid.closeAirValve()
-        self.motor_solenoid.pumpOff()
-
-
-    def splitFile(self):
-        with open(self.filename, "r") as file:
+    def splitFile(self, file):
+        with open(file, "r") as file:
             content = csv.reader(file)
             for line in content:
                 split_line = [s for s in line]
@@ -408,38 +402,63 @@ class SCodeParse():
                 case 'HOME':
                     home_state = self.command_vector[line_number][1]
                     self.commandHOME(home_state)
+                case 'SPRAY':
+                    spray_state = self.command_vector[line_number][1]
+                    self.commandSPRAY(spray_state)
                 case _:
                     print("Error in mneumonicMatch: invalid mneumonic {0} on line {1}".format(mneumonic, line_number))
+    def coatCycle(self):
+        for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
+            print(f"Layer {cycle_index} of {self.cycle_count} complete")
+            for step_index in range(self.step_count): # iterates through each coating step
+                self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
+                # need to determine how long pump runs before fluid reaches nozzle
+                # also need to determine how long to clear spray
+                pass
+
     def commandHOME(self, state):
         self.motor_solenoid.homeMotor(state)
         print(f"Homing {state}")
     def commandMOVE(self, state):
+        try:
+            axis = str(state[0])
+        except:
+            raise ValueError(f"Axis value {state[0]} could not be retyped as a string")
         try: 
             distance_value = int(state[1:])
         except:
             raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
-        self.motor_solenoid.moveMotor(distance_value, state[0])
+        self.motor_solenoid.moveMotor(distance_value, axis)
         print(f"Moving motor {state[0]} for {distance_value} units")     
     def commandPUMP(self, state):
         match state:
             case 'Off':
                 self.motor_solenoid.pumpOff()
-                print("Pumps off")
-            case _:
+                print("Pump off")
+            case 'On':
                 pump_index = int(state)
-                self.motor_solenoid.pumpOn(pump_index)
-                print(f"Pump {pump_index} on")
+                self.motor_solenoid.pumpOn()
+                print(f"Pump on")
+            case _:
+                raise ValueError(f"Pump state {state} is invalid, check pathing code or HardwareControls.Py")
     def commandVALV(self, state):
+        #WARNING: Overrides the coating selection done by coat cycle
+        try:
+            reservoir = int(state)
+        except:
+            raise ValueError(f"Reservoir {state} is invalid or does not exist, check pathing code or HardwareControls.Py")
+        self.motor_solenoid.setReservoirSelect(reservoir)
+    def commandSPRAY(self, state):
         match state:
             case "On":
-                self.motor_solenoid.openValve()
+                self.motor_solenoid.openAirValve()
                 print("Opening air compressor valve")
             case "Off":
-                self.motor_solenoid.closeValve()
+                self.motor_solenoid.closeAirValve()
                 print("Closing air compressor valve")
             case _:
                 duty_cycle = int(state)
-                self.motor_solenoid.pwmValve(duty_cycle)
+                self.motor_solenoid.pwmAirValve(duty_cycle)
                 print(f"Modulating air compressor at {duty_cycle/255}")
 
 
