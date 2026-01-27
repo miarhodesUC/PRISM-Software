@@ -349,6 +349,11 @@ class SCodeParse():
         self.grbl = GRBLDriver
     def startSequence(self):
         match(self.CURRENT_MODE):
+            case(self.CUSTOM_MODE):
+                self.splitPathFile()
+                self.loadCoatCycle()
+                self.executeCoatCycle()
+                
             case(self.GRBL_MODE):
                 self.loadCoatCycle()
                 self.grbl.open()
@@ -359,10 +364,7 @@ class SCodeParse():
                         self.shutdown()
                         self.grbl.write_line("$H") # TODO: Reconfigure config.h on GRBL controller to only home x and y
                 self.grbl.close()
-            case(self.CUSTOM_MODE):
-                self.splitPathFile()
-                self.loadCoatCycle()
-                self.executeCoatCycle()
+            
             case _:
                 raise ValueError("Unknown pathing configuration, check class SCodeParse in HardwareControls.py")
     
