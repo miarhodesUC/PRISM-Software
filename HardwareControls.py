@@ -341,7 +341,7 @@ class SCodeParse():
     PURGE_TIME = 10 #dummy value
     FLUID_LATENCY = 10 #dummy value
     def __init__(self, path_file : str, coating_routine : str, Solenoid = Solenoid(), GRBLDriver = GRBLDriver('/dev/ttyUSB0')):
-        self.path = path_file
+        self.pathfile = path_file
         self.routine = coating_routine
         self.command_vector = []
         self.gcode_vector = []
@@ -360,11 +360,22 @@ class SCodeParse():
                         self.grbl.write_line("$H") # TODO: Reconfigure config.h on GRBL controller to only home x and y
                 self.grbl.close()
             case(self.CUSTOM_MODE):
-                self.splitFile(self.path)
+                self.splitPathFile()
                 self.loadCoatCycle()
-                self.mneumonicMatch()
+                self.executeCoatCycle()
             case _:
                 raise ValueError("Unknown pathing configuration, check class SCodeParse in HardwareControls.py")
+    
+    def executeCoatCycle(self):
+        for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
+            print(f"Layer {cycle_index} of {self.cycle_count} complete")
+            for step_index in range(self.step_count): # iterates through each coating step
+                self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
+                # need to determine how long pump runs before fluid reaches nozzle
+                # also need to determine how long to clear spray
+                self.pathIterator()
+                pass
+    
     def loadCoatCycle(self):
         coat_vector = []
         with open(self.routine, "r") as file:
@@ -377,44 +388,40 @@ class SCodeParse():
         self.cycle_count = coat_vector[2][1]
         self.arr_reservoir = coat_vector[0]
         self.arr_coat_count = coat_vector[1]
-        print("under construction")
 
-    def splitFile(self, file):
-        with open(file, "r") as file:
+    def splitPathFile(self):
+        with open(self.pathfile, "r") as file:
             content = csv.reader(file)
             for line in content:
                 split_line = [s for s in line]
                 self.command_vector.append(split_line)
                 print(split_line)
-    def mneumonicMatch(self):
+
+    def pathIterator(self):
         for line_number in range(len(self.command_vector)):
             mneumonic = self.command_vector[line_number][0]
-            match mneumonic:
-                case 'MOVE':
-                    move_state = self.command_vector[line_number][1]
-                    self.commandMOVE(move_state)
-                case 'PUMP':
-                    pump_state = self.command_vector[line_number][1]
-                    self.commandPUMP(pump_state)
-                case 'VALV':
-                    valv_state = self.command_vector[line_number][1]
-                    self.commandVALV(valv_state)
-                case 'HOME':
-                    home_state = self.command_vector[line_number][1]
-                    self.commandHOME(home_state)
-                case 'SPRAY':
-                    spray_state = self.command_vector[line_number][1]
-                    self.commandSPRAY(spray_state)
-                case _:
-                    print("Error in mneumonicMatch: invalid mneumonic {0} on line {1}".format(mneumonic, line_number))
-    def coatCycle(self):
-        for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
-            print(f"Layer {cycle_index} of {self.cycle_count} complete")
-            for step_index in range(self.step_count): # iterates through each coating step
-                self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
-                # need to determine how long pump runs before fluid reaches nozzle
-                # also need to determine how long to clear spray
-                pass
+            state = self.command_vector[line_number][1]
+            self.mneumonicMatch(mneumonic, state)
+
+    def mneumonicMatch(self, mneumonic, state):
+        match mneumonic:
+            case 'MOVE':
+                move_state = state
+                self.commandMOVE(move_state)
+            case 'PUMP':
+                pump_state = state
+                self.commandPUMP(pump_state)
+            case 'VALV':
+                valv_state = state
+                self.commandVALV(valv_state)
+            case 'HOME':
+                home_state = state
+                self.commandHOME(home_state)
+            case 'SPRAY':
+                spray_state = state
+                self.commandSPRAY(spray_state)
+            case _:
+                print(f"Error in mneumonicMatch: invalid mneumonic {mneumonic}")
 
     def commandHOME(self, state):
         self.motor_solenoid.homeMotor(state)
@@ -429,7 +436,8 @@ class SCodeParse():
         except:
             raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
         self.motor_solenoid.moveMotor(distance_value, axis)
-        print(f"Moving motor {state[0]} for {distance_value} units")     
+        print(f"Moving motor {state[0]} for {distance_value} units")  
+   
     def commandPUMP(self, state):
         match state:
             case 'Off':
@@ -441,6 +449,7 @@ class SCodeParse():
                 print(f"Pump on")
             case _:
                 raise ValueError(f"Pump state {state} is invalid, check pathing code or HardwareControls.Py")
+
     def commandVALV(self, state):
         #WARNING: Overrides the coating selection done by coat cycle
         try:
@@ -448,6 +457,7 @@ class SCodeParse():
         except:
             raise ValueError(f"Reservoir {state} is invalid or does not exist, check pathing code or HardwareControls.Py")
         self.motor_solenoid.setReservoirSelect(reservoir)
+
     def commandSPRAY(self, state):
         match state:
             case "On":
