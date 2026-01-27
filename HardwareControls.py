@@ -1,75 +1,17 @@
 import pigpio
+import serial
+from pygrbl_streamer import GrblStreamer
 from pigpio_shell import pigpio_shell as shell
 import csv
 import time
 from numpy import heaviside as u
 from enum import Enum
 
+# There are several phases: 
+# Spray config
+# Pathing
+# Cleaning
 
-class SCodeParse():
-    def __init__(self, filename : str, MotorSolenoid):
-        self.filename = filename
-        self.command_vector = []
-        self.motor_solenoid = MotorSolenoid
-    def startSequence(self):
-        self.splitFile()
-        self.mneumonicMatch()
-    def splitFile(self):
-        with open(self.filename, "r") as file:
-            content = csv.reader(file)
-            for line in content:
-                split_line = [s for s in line]
-                self.command_vector.append(split_line)
-                print(split_line)
-    def mneumonicMatch(self):
-        for line_number in range(len(self.command_vector)):
-            mneumonic = self.command_vector[line_number][0]
-            match mneumonic:
-                case 'MOVE':
-                    move_state = self.command_vector[line_number][1]
-                    self.commandMOVE(move_state)
-                case 'PUMP':
-                    pump_state = self.command_vector[line_number][1]
-                    self.commandPUMP(pump_state)
-                case 'VALV':
-                    valv_state = self.command_vector[line_number][1]
-                    self.commandVALV(valv_state)
-                case 'HOME':
-                    home_state = self.command_vector[line_number][1]
-                    self.commandHOME(home_state)
-                case _:
-                    print("Error in mneumonicMatch: invalid mneumonic {0} on line {1}".format(mneumonic, line_number))             
-    def commandHOME(self, state):
-        self.motor_solenoid.homeMotor(state)
-        print(f"Homing {state}")
-    def commandMOVE(self, state):
-        try: 
-            distance_value = int(state[1:])
-        except:
-            raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
-        self.motor_solenoid.moveMotor(distance_value, state[0])
-        print(f"Moving motor {state[0]} for {distance_value} units")     
-    def commandPUMP(self, state):
-        match state:
-            case 'Off':
-                self.motor_solenoid.pumpOff()
-                print("Pumps off")
-            case _:
-                pump_index = int(state)
-                self.motor_solenoid.pumpOn(pump_index)
-                print(f"Pump {pump_index} on")
-    def commandVALV(self, state):
-        match state:
-            case "On":
-                self.motor_solenoid.openValve()
-                print("Opening air compressor valve")
-            case "Off":
-                self.motor_solenoid.closeValve()
-                print("Closing air compressor valve")
-            case _:
-                duty_cycle = int(state)
-                self.motor_solenoid.pwmValve(duty_cycle)
-                print(f"Modulating air compressor at {duty_cycle/255}")
 
 # this was for making sure SCodeParse works as intended
 class motor_solenoid_shell():
@@ -176,6 +118,22 @@ class HAL(): # Contains basic GPIO commands
     def setAsOutput(self, pin):
         self.pi.set_mode(pin, pigpio.OUTPUT)
 
+class GRBLDriver(GrblStreamer):
+    def progress_callback(self, percent: int, command: str):
+        print(f"Progress: {percent}% - {command}")
+    
+    def alarm_callback(self, line: str):
+        print(f"ALARM: {line}")
+    
+    def error_callback(self, line: str):
+        if "DEVICE_DISCONNECTED" in line:
+            print(f"Device disconnected: {line}")
+            # Handle disconnection gracefully
+            return
+        print(f"ERROR: {line}")
+    
+
+
 # NO TOUCH, I MEAN IT MIA
 # YES YOU, I MEAN YOU FUTURE MIA, I KNOW YOU ARE GOING TO TRY TO TWEAK SOMETHING
 # IF YOU *REALLY* NEED TO CHANGE SOMETHING, MAKE A COPY OF THE FILE AND CHANGE IT THEIR
@@ -184,7 +142,7 @@ class HAL(): # Contains basic GPIO commands
 # also you're allowed to actually add the HOME ALL feature BUT THAT'S IT
 # To past mia: girl you forgot that if pressurized air is allowed into every nozzle, all of them will spray
 # actually never mind
-class MotorSolenoid():
+class Solenoid():
     #DIRECTION
     DIRECTION_POSITIVE = 0
     DIRECTION_NEGATIVE = 1
@@ -197,6 +155,7 @@ class MotorSolenoid():
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 0
     VALVE_FREQUENCY_INDEX = 1
+    
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 1
@@ -208,56 +167,67 @@ class MotorSolenoid():
     #INPUTS
     X_SWITCH_PIN = 23
     Y_SWITCH_PIN = 24
+    EITHER_EDGE = 2
+    FALLING_EDGE = 1
+    RISING_EDGE = 0
 
     #SOLENOID
     SOLENOID_PIN = 25
     SOLENOID_SELECT_LOWBIT = 26
     SOLENOID_SELECT_HIGHBIT = 16
+
     #LOCOMOTIVE MOTORS
     LOCOMOTIVE_DIRECTION_PIN = 17
-    LOCOMOTIVE_STEP_PIN = 18
-    LOCOMOTIVE_SELECT_HIGHBIT = 27
-    LOCOMOTIVE_SELECT_LOWBIT = 22
+    LOCOMOTIVE_STEP_PIN_X = 18
+    LOCOMOTIVE_STEP_PIN_Y = 27
+    LOCOMOTIVE_STEP_PIN_T = 22
 
-    #Select values| 00: no motor | 01: motor X | 10: motor Y | 11: motor T
     #PERISTALTIC MOTORS
     PERISTALTIC_STEP_PIN = 13
-    PERISTALTIC_SELECT_HIGHBIT = 6
-    PERISTALTIC_SELECT_LOWBIT = 5
+    RESERVOIR_SELECT_HIGHBIT = 6
+    RESERVOIR_SELECT_LOWBIT = 5
 
     def __init__(self, hal = HAL()):
         self.hal = hal
+        self.homing = False # homing state determines behavior of limit switches
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
-    def setLocomotiveSelect(self, axis:int):
-        self.hal.selectDEMUX(axis, self.LOCOMOTIVE_SELECT_LOWBIT, self.LOCOMOTIVE_SELECT_HIGHBIT)
-    def setPeristalticSelect(self, pump:int): #we can just mouch off of this mux to select the solenoid, ohoho, delightfully devilish mia
-        self.hal.selectDEMUX(pump, self.PERISTALTIC_SELECT_LOWBIT, self.PERISTALTIC_SELECT_HIGHBIT)
-    def moveMotor(self, distance_value, axis:str):
+        limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling)
+        limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling)
+    def limitHandling(self): # ensures that motors don't get damaged by moving out of bounds
+        if self.homing == True: # if homing is on, limit switches won't shutdown system
+            pass
+        else:
+            print("WARNING: Limit switch triggered")
+            self.shutdown()
+    def setReservoirSelect(self, valve:int): # tooling for selecting coating solution
+        self.hal.selectDEMUX(valve, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
+    def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
         match axis:
             case 'X':
-                self.setLocomotiveSelect(1)
+                step_pin = self.LOCOMOTIVE_STEP_PIN_X
             case 'Y':
-                self.setLocomotiveSelect(2)
+                step_pin = self.LOCOMOTIVE_STEP_PIN_Y
             case 'T':
-                self.setLocomotiveSelect(3)
+                step_pin = self.LOCOMOTIVE_STEP_PIN_T
             case 'Idle':
-                self.setLocomotiveSelect(0)
+                print("Idle motor")
             case _:
                 raise ValueError("Error in moveMotor: {} is an invalid axis".format(axis))
         time_value_s = abs(distance_value) / (self.STEP_MODE_VALUE * 
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
-        self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
+        self.hal.moveStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         time.sleep(time_value_s)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
-    def homeMotor(self, axis:str):
+        self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
+    def homeMotor(self, axis:str): # resets motors to origin as all movement commands are relative
+        self.homing = True
         match axis:
             case 'X':
-                self.setLocomotiveSelect(1)
+                step_pin = self.LOCOMOTIVE_STEP_PIN_X
                 switch_pin = self.X_SWITCH_PIN
             case 'Y':
-                self.setLocomotiveSelect(2)
+                step_pin = self.LOCOMOTIVE_STEP_PIN_Y
                 switch_pin = self.Y_SWITCH_PIN
             case 'T':
                 # self.setLocomotiveSelect(3)
@@ -265,26 +235,26 @@ class MotorSolenoid():
                 print("Homing T not yet implemented")
                 return 0
             case 'ALL':
-                self.setLocomotiveSelect(1)
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
+                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 state = 0
                 while state == 0:
                     state = self.hal.checkLimitSwitch(switch_pin)
                     if state == 1:
-                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
-                self.setLocomotiveSelect(2)
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
+                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
+                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 state = 0
                 while state == 0:
                     state = self.hal.checkLimitSwitch(switch_pin)
                     if state == 1:
-                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+                        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
+                self.homing = False
                 return 0
             case _:
+                self.homing = False
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
-        self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN, 
+        self.hal.moveStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         state = 0
         count = 0
@@ -292,22 +262,30 @@ class MotorSolenoid():
             count += 1
             state = self.hal.checkLimitSwitch(switch_pin)
             if state == 1:
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+                self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
+                self.homing = False
             if count > 1000000:
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+                self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
                 state = 1
+                self.homing = False
                 raise TimeoutError("Homing sequence expired")
-    def pumpOn(self, pump):
-        self.setPeristalticSelect(pump)
+    def pumpOn(self, reservoir):
+        self.setReservoirSelect(reservoir)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
         self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
-    def openValve(self):
+    def openAirValve(self):
         self.hal.setPinHigh(self.SOLENOID_PIN)
-    def closeValve(self):
+    def closeAirValve(self):
         self.hal.setPinLow(self.SOLENOID_PIN)
-    def pwmValve(self, pwm_value):
+    def pwmAirValve(self, pwm_value):
         self.hal.setPWM(self.SOLENOID_PIN, pwm_value, self.VALVE_FREQUENCY_INDEX)
+    def shutdown(self):
+        self.closeAirValve()
+        self.pumpOff()
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T)
 
 class I2C():
     I2C_BUS = 1
@@ -318,7 +296,7 @@ class I2C():
         # self.receive_buffer = []
     
     def i2cTransmit(self, tx_data):
-        error = self.pi.i2c_wsrite_device(self.handle, tx_data)
+        error = self.pi.i2c_write_device(self.handle, tx_data)
         print("Transmitting data: {}\n".format(tx_data))
         if error == 0:
             print("SUCCESS")
@@ -345,5 +323,128 @@ class I2C():
         self.i2cTransmit(register_address)
         self.i2cTransmit(tx_data)   
 
+class GRBLDriver(GrblStreamer):
+    def progress_callback(self, percent: int, command: str):
+        print(f"Progress: {percent}% - {command}")
+    
+    def alarm_callback(self, line: str):
+        print(f"ALARM: {line}")
+    
+    def error_callback(self, line: str):
+        if "DEVICE_DISCONNECTED" in line:
+            print(f"Device disconnected: {line}")
+            # Handle disconnection gracefully
+            return
+        print(f"ERROR: {line}")
+
+class SCodeParse():
+    GRBL_MODE = 1
+    CUSTOM_MODE = 0
+    CURRENT_MODE = 0
+    def __init__(self, gcode_file : str, coating_routine : str, Solenoid = Solenoid(), GRBLDriver = GRBLDriver('/dev/ttyUSB0')):
+        self.gcode = gcode_file
+        self.routine = coating_routine
+        self.command_vector = []
+        self.gcode_vector = []
+        self.motor_solenoid = Solenoid
+        self.grbl = GRBLDriver
+    def startSequence(self):
+        match(self.CURRENT_MODE):
+            case(self.GRBL_MODE):
+                self.loadCoatCycle()
+                self.grbl.open()
+                for cycle_index in range(self.cycle_count):
+                    for step_index in range(self.step_count):
+                        self.startSpraying(step_index)
+                        self.grbl.send_file(self.gcode)
+                        self.shutdown()
+                        self.grbl.write_line("$H") # TODO: Reconfigure config.h on GRBL controller to only home x and y
+                self.grbl.close()
+            case(self.CUSTOM_MODE):
+                self.splitFile()
+                self.mneumonicMatch()
+            case _:
+                raise ValueError
+                
+    def loadCoatCycle(self):
+        coat_vector = []
+        with open(self.routine, "r") as file:
+            content = csv.reader(file)
+            for line in content:
+                int_line = [int(s) for s in line]
+                coat_vector.append(int_line)
+                print(int_line)
+        self.step_count = coat_vector[2][0]
+        self.cycle_count = coat_vector[2][1]
+        self.arr_reservoir = coat_vector[0]
+        self.arr_coat_count = coat_vector[1]
+        print("under construction")
+    def executePathing(self):
+        pass
+    def startSpraying(self, step_index):
+        self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
+        self.motor_solenoid.openAirValve()
+
+    def shutdown(self):
+        self.motor_solenoid.closeAirValve()
+        self.motor_solenoid.pumpOff()
+
+
+    def splitFile(self):
+        with open(self.filename, "r") as file:
+            content = csv.reader(file)
+            for line in content:
+                split_line = [s for s in line]
+                self.command_vector.append(split_line)
+                print(split_line)
+    def mneumonicMatch(self):
+        for line_number in range(len(self.command_vector)):
+            mneumonic = self.command_vector[line_number][0]
+            match mneumonic:
+                case 'MOVE':
+                    move_state = self.command_vector[line_number][1]
+                    self.commandMOVE(move_state)
+                case 'PUMP':
+                    pump_state = self.command_vector[line_number][1]
+                    self.commandPUMP(pump_state)
+                case 'VALV':
+                    valv_state = self.command_vector[line_number][1]
+                    self.commandVALV(valv_state)
+                case 'HOME':
+                    home_state = self.command_vector[line_number][1]
+                    self.commandHOME(home_state)
+                case _:
+                    print("Error in mneumonicMatch: invalid mneumonic {0} on line {1}".format(mneumonic, line_number))
+    def commandHOME(self, state):
+        self.motor_solenoid.homeMotor(state)
+        print(f"Homing {state}")
+    def commandMOVE(self, state):
+        try: 
+            distance_value = int(state[1:])
+        except:
+            raise ValueError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
+        self.motor_solenoid.moveMotor(distance_value, state[0])
+        print(f"Moving motor {state[0]} for {distance_value} units")     
+    def commandPUMP(self, state):
+        match state:
+            case 'Off':
+                self.motor_solenoid.pumpOff()
+                print("Pumps off")
+            case _:
+                pump_index = int(state)
+                self.motor_solenoid.pumpOn(pump_index)
+                print(f"Pump {pump_index} on")
+    def commandVALV(self, state):
+        match state:
+            case "On":
+                self.motor_solenoid.openValve()
+                print("Opening air compressor valve")
+            case "Off":
+                self.motor_solenoid.closeValve()
+                print("Closing air compressor valve")
+            case _:
+                duty_cycle = int(state)
+                self.motor_solenoid.pwmValve(duty_cycle)
+                print(f"Modulating air compressor at {duty_cycle/255}")
 
 
