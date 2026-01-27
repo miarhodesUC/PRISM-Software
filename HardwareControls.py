@@ -7,11 +7,7 @@ import time
 from numpy import heaviside as u
 from enum import Enum
 
-# There are several phases: 
-# Spray config
-# Pathing
-# Cleaning
-
+# To any future programmers looking at this, my deepest apologies
 
 # this was for making sure SCodeParse works as intended
 class motor_solenoid_shell():
@@ -44,7 +40,7 @@ class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     def __init__(self, pi=pigpio.pi()):
         self.pi = pi
-    def checkPin(self, pin, method):
+    def checkPin(self, pin, method): # raises errors early
         if type(pin) is not int:
             raise TypeError("checkPin error in {0}, {1} is not an integer".format(method, pin))
         if pin > 31:
@@ -155,7 +151,7 @@ class Solenoid():
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 0
     VALVE_FREQUENCY_INDEX = 1
-    
+
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 1
@@ -171,36 +167,34 @@ class Solenoid():
     FALLING_EDGE = 1
     RISING_EDGE = 0
 
-    #SOLENOID
-    SOLENOID_PIN = 25
-    SOLENOID_SELECT_LOWBIT = 26
-    SOLENOID_SELECT_HIGHBIT = 16
-
     #LOCOMOTIVE MOTORS
     LOCOMOTIVE_DIRECTION_PIN = 17
     LOCOMOTIVE_STEP_PIN_X = 18
     LOCOMOTIVE_STEP_PIN_Y = 27
     LOCOMOTIVE_STEP_PIN_T = 22
 
-    #PERISTALTIC MOTORS
+    #SPRAY MOTORS
     PERISTALTIC_STEP_PIN = 13
     RESERVOIR_SELECT_HIGHBIT = 6
     RESERVOIR_SELECT_LOWBIT = 5
+    AIR_VALVE_PIN = 25
 
     def __init__(self, hal = HAL()):
-        self.hal = hal
+        self.hal = hal # 'imports' HAL object into this one for using HAL methods
         self.homing = False # homing state determines behavior of limit switches
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
-        limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling)
-        limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling)
+        #TODO (maybe): Add position tracking for soft limit checks
+        #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
+        limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling) #calls limit handling for xlim
+        limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.EITHER_EDGE, self.limitHandling) #calls limit handling for ylim
     def limitHandling(self): # ensures that motors don't get damaged by moving out of bounds
         if self.homing == True: # if homing is on, limit switches won't shutdown system
             pass
         else:
             print("WARNING: Limit switch triggered")
             self.shutdown()
-    def setReservoirSelect(self, valve:int): # tooling for selecting coating solution
+    def setReservoirSelect(self, valve:int): # internal tooling for selecting coating solution
         self.hal.selectDEMUX(valve, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
     def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
         match axis:
@@ -220,7 +214,7 @@ class Solenoid():
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         time.sleep(time_value_s)
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
-    def homeMotor(self, axis:str): # resets motors to origin as all movement commands are relative
+    def homeMotor(self, axis:str): # resets motors to origin
         self.homing = True
         match axis:
             case 'X':
@@ -230,7 +224,8 @@ class Solenoid():
                 step_pin = self.LOCOMOTIVE_STEP_PIN_Y
                 switch_pin = self.Y_SWITCH_PIN
             case 'T':
-                # self.setLocomotiveSelect(3)
+                # If a turntable is added, uncomment this section
+                # step_pin = self.LOCOMOTIVE_STEP_PIN_T
                 # switch_pin = self.T_SWITCH_PIN
                 print("Homing T not yet implemented")
                 return 0
@@ -269,8 +264,8 @@ class Solenoid():
                 state = 1
                 self.homing = False
                 raise TimeoutError("Homing sequence expired")
-    def pumpOn(self, reservoir):
-        self.setReservoirSelect(reservoir)
+    def pumpOn(self, reservoir): #
+        self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
         self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
@@ -382,7 +377,7 @@ class SCodeParse():
     def executePathing(self):
         pass
     def startSpraying(self, step_index):
-        self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
+        self.motor_solenoid.pumpOn(self.arr_reservoir[step_index])
         self.motor_solenoid.openAirValve()
 
     def shutdown(self):
