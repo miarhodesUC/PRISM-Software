@@ -130,16 +130,26 @@ class Solenoid():
 
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
-        self.homing = False # homing state determines behavior of limit switches
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
+        self.setHomingState(False)
         self.limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for xlim
         self.limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for ylim
-    def limitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
+    def setHomingState(self, state: bool):
+        if state:
+            print("Setting homing to true")
+            self.homing = True
+        else:
+            print("Setting homing to false")
+            self.homing = False
+    def checkHomingState(self):
+        print("Checking homing state\n")
         print(f"Homing state is {self.homing}")
-        if self.homing == False: # if homing is on, limit switches won't shutdown system
+        return self.homing
+    def limitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
+        if self.checkHomingState() == False: # if homing is on, limit switches won't shutdown system
             print("Limit switch hit while homing is off")
             self.shutdown()
             raise SystemError("Limit switch triggered")
@@ -148,7 +158,7 @@ class Solenoid():
             self.hal.stopStepperMotor(self.X_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.X_LIMIT_EVENT)
         elif gpio == self.Y_SWITCH_PIN:
-            print("X limit reached")
+            print("Y limit reached while homing on")
             self.hal.stopStepperMotor(self.Y_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.Y_LIMIT_EVENT)
         else:
@@ -180,28 +190,25 @@ class Solenoid():
         match axis:
             case 'X':
                 print("Homing X")
-                self.homing = True
+                self.setHomingState(True)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                print(f"Homing state is {self.homing}")
                 self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
-                print("Done, setting homing to false")
-                self.homing = False
+                self.setHomingState(False)
             case 'Y':
-                print("Homing Y")
+                self.setHomingState(True)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
-                print("Done, setting homing to false")
-                self.homing = False
+                self.setHomingState(False)
             case 'T':
                 # If a turntable is added, uncomment this section
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
                 # switch_pin = self.T_SWITCH_PIN
                 print("Homing T not yet implemented")
-                return 0
             case 'ALL':
                 print("Homing all motors")
+                self.setHomingState(True)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
@@ -210,10 +217,8 @@ class Solenoid():
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
                 self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
-                self.homing = False
-                return 0
+                self.setHomingState(False)
             case _:
-                self.homing = False
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
     def pumpOn(self):
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
