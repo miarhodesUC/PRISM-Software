@@ -138,11 +138,11 @@ class Solenoid():
             self.shutdown()
             raise SystemError("Limit switch triggered")
     def homingLimitHandling(self, gpio, level, tick):
-        if gpio == self.LOCOMOTIVE_STEP_PIN_X:
+        if gpio == self.X_SWITCH_PIN:
             print("X limit triggered")
             self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.X_LIMIT_EVENT)
-        elif gpio == self.LOCOMOTIVE_STEP_PIN_Y:
+        elif gpio == self.Y_SWITCH_PIN:
             print("Y limit triggered")
             self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.Y_LIMIT_EVENT)
@@ -197,10 +197,8 @@ class Solenoid():
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
                 self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
             case _:
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
