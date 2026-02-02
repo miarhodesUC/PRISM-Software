@@ -28,7 +28,9 @@ def main():
          ['PUMP', 'Off'],
          ['VALV', 'Off']
     ])
-    solenoid = Solenoid()
-    solenoid.homeMotor('X')
+    test_solenoid = Solenoid()
+    test_solenoid.homing = True
+    test_solenoid.homeMotor('X')
+    test_solenoid.homing = False
 if __name__ == "__main__":
     main()
