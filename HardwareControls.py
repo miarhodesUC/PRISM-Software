@@ -139,10 +139,11 @@ class Solenoid():
         self.limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for ylim
     def limitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
         if self.homing == False: # if homing is on, limit switches won't shutdown system
+            print("Limit switch hit while homing is off")
             self.shutdown()
             raise SystemError("Limit switch triggered")
         if gpio == self.X_SWITCH_PIN:
-            print("X limit reached")
+            print("X limit reached while homing on")
             self.hal.stopStepperMotor(self.X_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.X_LIMIT_EVENT)
         if gpio == self.Y_SWITCH_PIN:
@@ -173,21 +174,22 @@ class Solenoid():
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
         self.homing = True
+        print("setting homing to true")
         match axis:
             case 'X':
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
                 self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
-                print("Done")
+                print("Done, setting homing to false")
+                self.homing = False
             case 'Y':
                 print("Homing Y")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
-                self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
-                print("Done")
+                print("Done, setting homing to false")
+                self.homing = False
             case 'T':
                 # If a turntable is added, uncomment this section
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
@@ -222,9 +224,9 @@ class Solenoid():
     def shutdown(self):
         self.closeAirValve()
         self.pumpOff()
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T)   
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T, self.LOCOMOTIVE_DIRECTION_PIN)   
 
 class SCodeParse():
     # Fluid handling configs
