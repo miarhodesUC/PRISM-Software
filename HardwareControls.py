@@ -138,18 +138,22 @@ class Solenoid():
         self.limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for xlim
         self.limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for ylim
     def limitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
+        print(f"Homing state is {self.homing}")
         if self.homing == False: # if homing is on, limit switches won't shutdown system
             print("Limit switch hit while homing is off")
             self.shutdown()
             raise SystemError("Limit switch triggered")
-        if gpio == self.X_SWITCH_PIN:
+        elif gpio == self.X_SWITCH_PIN:
             print("X limit reached while homing on")
             self.hal.stopStepperMotor(self.X_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.X_LIMIT_EVENT)
-        if gpio == self.Y_SWITCH_PIN:
+        elif gpio == self.Y_SWITCH_PIN:
             print("X limit reached")
             self.hal.stopStepperMotor(self.Y_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.Y_LIMIT_EVENT)
+        else:
+            self.shutdown()
+            print("Unknown state")
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
     def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
@@ -173,13 +177,13 @@ class Solenoid():
         time.sleep(time_value_s) # there's probably a better way to do this
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
-        self.homing = True
-        print("setting homing to true")
         match axis:
             case 'X':
                 print("Homing X")
+                self.homing = True
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
+                print(f"Homing state is {self.homing}")
                 self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
                 print("Done, setting homing to false")
                 self.homing = False
