@@ -130,32 +130,29 @@ class Solenoid():
 
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
-        self.homing = False
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
-        self.limit_x = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for xlim
-        self.limit_y = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.limitHandling) #calls limit handling for ylim
-    def limitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
-        if self.homing == False: # if homing is on, limit switches won't shutdown system
-            print("Limit switch hit while homing is off")
+    def movingLimitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
             self.shutdown()
             raise SystemError("Limit switch triggered")
-        elif gpio == self.X_SWITCH_PIN:
-            print("X limit reached while homing on")
-            self.hal.stopStepperMotor(self.X_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+    def homingLimitHandling(self, gpio, level, tick):
+        if gpio == self.LOCOMOTIVE_STEP_PIN_X:
+            print("X limit triggered")
+            self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.X_LIMIT_EVENT)
-        elif gpio == self.Y_SWITCH_PIN:
-            print("Y limit reached while homing on")
-            self.hal.stopStepperMotor(self.Y_SWITCH_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+        elif gpio == self.LOCOMOTIVE_STEP_PIN_Y:
+            print("Y limit triggered")
+            self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
             self.hal.pi.event_trigger(self.Y_LIMIT_EVENT)
         else:
-            self.shutdown()
-            print("Unknown state")
+            print("Unknown callback")
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
     def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
+        self.x_limit = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.movingLimitHandling)
+        self.y_limit = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.movingLimitHandling)
         match axis:
             case 'X':
                 print("Moving X")
@@ -175,7 +172,11 @@ class Solenoid():
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         time.sleep(time_value_s) # there's probably a better way to do this
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.x_limit.cancel()
+        self.y_limit.cancel()
     def homeMotor(self, axis:str): # resets motors to origin
+        self.x_limit = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.homingLimitHandling)
+        self.y_limit = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.homingLimitHandling)
         match axis:
             case 'X':
                 print("Homing X")
@@ -203,6 +204,8 @@ class Solenoid():
                 self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
             case _:
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
+        self.x_limit.cancel()
+        self.y_limit.cancel()
     def pumpOn(self):
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
