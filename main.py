@@ -7,7 +7,7 @@ from pigpio_shell import pigpio_shell as shell
 import csv
 import time
 from numpy import heaviside as u
-from HardwareControls import HAL, MotorSolenoid, SCodeParse
+from HardwareControls import HAL, Solenoid, SCodeParse
 
 def generateTestFile(file_name, save_vector):
     with open(file_name, "w", newline="") as file:
@@ -28,7 +28,7 @@ def main():
          ['PUMP', 'Off'],
          ['VALV', 'Off']
     ])
-    parser = SCodeParse("testfile.csv", MotorSolenoid(HAL(pigpio.pi())))
-    parser.startSequence()
+    solenoid = Solenoid()
+    solenoid.homeMotor('X')
 if __name__ == "__main__":
     main()
