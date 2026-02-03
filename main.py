@@ -22,15 +22,13 @@ def main():
          ['HOME', 'Y'],
          ['MOVE', 'X40'],
          ['MOVE', 'Y30'],
-         ['PUMP', '2'],
-         ['VALV', '128'],
-         ['MOVE', 'T50'],
-         ['PUMP', 'Off'],
-         ['VALV', 'Off']
+         ['SPRAY', 'On'],
+         ['MOVE', 'Y20'],
+         ['MOVE', 'X-20'],
+         ['MOVE', 'Y-20'],
+         ['MOVE', 'X20'],
+         ['SPRAY', 'Off']
     ])
-    test_solenoid = Solenoid()
-    test_solenoid.homing = True
-    test_solenoid.homeMotor('X')
-    test_solenoid.homing = False
+    test_session = SCodeParse("testfile.csv", "SavedCycle.csv", Solenoid(HAL(pigpio.pi())))
 if __name__ == "__main__":
     main()

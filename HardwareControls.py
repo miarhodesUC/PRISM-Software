@@ -244,7 +244,6 @@ class SCodeParse():
                 # need to determine how long pump runs before fluid reaches nozzle
                 # also need to determine how long to clear spray
                 self.pathIterator()
-                pass
     
     def loadCoatCycle(self):
         coat_vector = []
