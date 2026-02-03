@@ -22,13 +22,18 @@ def main():
          ['HOME', 'Y'],
          ['MOVE', 'X40'],
          ['MOVE', 'Y30'],
+         ['PUMP', 'On'],
          ['SPRAY', 'On'],
-         ['MOVE', 'Y20'],
          ['MOVE', 'X-20'],
          ['MOVE', 'Y-20'],
-         ['MOVE', 'X20'],
+         ['PUMP', 'Off'],
          ['SPRAY', 'Off']
     ])
-    test_session = SCodeParse("testfile.csv", "SavedCycle.csv", Solenoid(HAL(pigpio.pi())))
+    generateTestFile("spraytest.csv", [
+         [1, 0, 3, 2],
+         [1, 1, 1, 1],
+         [4, 2]
+    ])
+    test_session = SCodeParse("testfile.csv", "spraytest.csv", Solenoid(HAL(pigpio.pi())))
 if __name__ == "__main__":
     main()
