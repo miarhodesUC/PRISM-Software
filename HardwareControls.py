@@ -106,7 +106,7 @@ class Solenoid():
     VOLUME_PER_STEP = 1
 
     # PIN CONFIGS
-
+    #TODO Have these configs saved in a JSON file or a txt file
     #INPUTS
     X_SWITCH_PIN = 23
     Y_SWITCH_PIN = 24
