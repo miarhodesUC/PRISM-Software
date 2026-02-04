@@ -168,6 +168,7 @@ class Solenoid():
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.X_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
+                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
                 else:
                     raise TimeoutError("Homing not complete")
             case 'Y':
@@ -176,6 +177,7 @@ class Solenoid():
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.Y_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
+                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
                 else:
                     raise TimeoutError("Homing not complete")
             case 'T':
