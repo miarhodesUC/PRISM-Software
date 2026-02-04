@@ -75,7 +75,7 @@ class HAL(): # Contains basic GPIO commands
         if direction_pin is not None:
             self.setDirection(direction, direction_pin)
         self.setPWM(step_pin, duty_cycle, frequency_index)
-        print(f"Starting motor pin {step_pin}")
+        print(f"Starting motor pin {step_pin} @ frequency {self.PWM_FREQUENCY_LIST[frequency_index]}, dutycycle {duty_cycle}")
     def stopStepperMotor(self, step_pin, direction_pin):
         self.setPinLow(step_pin)
         self.setPinLow(direction_pin)
@@ -177,7 +177,7 @@ class Solenoid():
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.Y_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
-                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
+                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
                 else:
                     raise TimeoutError("Homing not complete")
             case 'T':
