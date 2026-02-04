@@ -230,6 +230,7 @@ class SCodeParse():
         self.routine = coating_routine
         self.command_vector = []
         self.motor_solenoid = Solenoid
+        print("Initalization complete, starting coating sequence...")
 
     def startSequence(self):
         self.splitPathFile()
