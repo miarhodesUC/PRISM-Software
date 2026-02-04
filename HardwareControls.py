@@ -270,12 +270,15 @@ class SCodeParse():
                 print(split_line)
 
     def pathIterator(self):
+        print("Executing path iterator")
         for line_number in range(len(self.command_vector)):
+            print(f"Executing line {line_number}")
             mneumonic = self.command_vector[line_number][0]
             state = self.command_vector[line_number][1]
             self.mneumonicMatch(mneumonic, state)
 
     def mneumonicMatch(self, mneumonic, state):
+        print("Performing mneumonic match")
         match mneumonic:
             case 'MOVE':
                 move_state = state
