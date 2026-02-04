@@ -155,12 +155,10 @@ class Solenoid():
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         if self.hal.pi.wait_for_edge(limit_pin, self.FALLING_EDGE, time_value_s): #times out after desired movement time
             print("Limit switch triggered")
-            raise SystemError
+            self.shutdown()
         # time.sleep(time_value_s) # there's probably a better way to do this -> there's actually a worse ^
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
-        self.x_limit = self.hal.pi.callback(self.X_SWITCH_PIN, self.FALLING_EDGE, self.homingLimitHandling)
-        self.y_limit = self.hal.pi.callback(self.Y_SWITCH_PIN, self.FALLING_EDGE, self.homingLimitHandling)
         match axis:
             case 'X':
                 print("Homing X")
@@ -199,8 +197,6 @@ class Solenoid():
                     raise TimeoutError("Homing not complete")
             case _:
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
-        self.x_limit.cancel()
-        self.y_limit.cancel()
     def pumpOn(self):
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
     def pumpOff(self):
@@ -218,7 +214,7 @@ class Solenoid():
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T, self.LOCOMOTIVE_DIRECTION_PIN)
-        raise SystemError  
+        raise SystemError("Shutdown sequence called")
 
 class SCodeParse():
     # Fluid handling configs
