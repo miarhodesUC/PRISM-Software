@@ -182,11 +182,12 @@ class Solenoid():
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 5)
+                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 10)
             case 'Y':
+                print("Homing Y")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 5)
+                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 10)
             case 'T':
                 # If a turntable is added, uncomment this section
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
@@ -215,6 +216,7 @@ class Solenoid():
     def pwmAirValve(self, pwm_value):
         self.hal.setPWM(self.AIR_VALVE_PIN, pwm_value, self.VALVE_FREQUENCY_INDEX)
     def shutdown(self):
+        print("Shutting down")
         self.closeAirValve()
         self.pumpOff()
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
@@ -304,8 +306,8 @@ class SCodeParse():
                 raise ValueError(f"Error in mneumonicMatch: invalid mneumonic {mneumonic}")
 
     def commandHOME(self, state):
+        print("Executing command Home")
         self.motor_solenoid.homeMotor(state)
-        print(f"Homing {state}")
 
     def commandMOVE(self, state):
         try:
