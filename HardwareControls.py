@@ -182,12 +182,18 @@ class Solenoid():
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 10)
+                if self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 20):
+                    print("Limit switch event detected")
+                else:
+                    raise TimeoutError("Homing not complete")
             case 'Y':
                 print("Homing Y")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 10)
+                if self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 20):
+                    print("Limit switch event detected")
+                else:
+                    raise TimeoutError("Homing not complete")
             case 'T':
                 # If a turntable is added, uncomment this section
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
