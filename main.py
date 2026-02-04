@@ -19,16 +19,16 @@ def generateTestFile(file_name, save_vector):
 def main():
     generateTestFile("testfile.csv",[
          ['HOME', 'X'],
-         ['HOME', 'Y']])
-        # ['MOVE', 'X40'],
-         #['MOVE', 'Y30'],
-         #['PUMP', 'On'],
-         #['SPRAY', 'On'],
-         #['MOVE', 'X-20'],
-         #['MOVE', 'Y-20'],
-         #['PUMP', 'Off'],
-         #['SPRAY', 'Off']
-    
+         ['HOME', 'Y'],
+         ['MOVE', 'X40'],
+         ['MOVE', 'Y30'],
+         ['PUMP', 'On'],
+         ['SPRAY', 'On'],
+         ['MOVE', 'X-20'],
+         ['MOVE', 'Y-20'],
+         ['PUMP', 'Off'],
+         ['SPRAY', 'Off']
+    ])
     generateTestFile("spraytest.csv", [
          [1, 0, 3, 2],
          [1, 1, 1, 1],
