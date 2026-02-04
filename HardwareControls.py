@@ -277,22 +277,27 @@ class SCodeParse():
         match mneumonic:
             case 'MOVE':
                 print("Found case 'MOVE'")
+                print(f"State: {state}")
                 move_state = state
                 self.commandMOVE(move_state)
             case 'PUMP':
                 print("Found case 'PUMP'")
+                print(f"State: {state}")
                 pump_state = state
                 self.commandPUMP(pump_state)
             case 'VALV':
                 print("Found case 'VALV'")
+                print(f"State: {state}")
                 valv_state = state
                 self.commandVALV(valv_state)
             case 'HOME':
                 print("Found case 'HOME'")
+                print(f"State: {state}")
                 home_state = state
                 self.commandHOME(home_state)
             case 'SPRAY':
                 print("Found case 'SPRAY'")
+                print(f"State: {state}")
                 spray_state = state
                 self.commandSPRAY(spray_state)
             case _:
