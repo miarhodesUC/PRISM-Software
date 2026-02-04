@@ -23,9 +23,11 @@ class HAL(): # Contains basic GPIO commands
     def setPinHigh(self, pin:int):
         self.checkPin(pin, "setPinHigh")
         self.pi.write(pin, 1)
+        print(f"Pin {pin} HIGH")
     def setPinLow(self, pin:int):
         self.checkPin(pin, "setPinLow")
         self.pi.write(pin, 0)
+        print(f"Pin {pin} LOW")
     def setPWM(self, pin, duty_cycle:int, frequency_index:int):
         self.checkPin(pin, "setPWM")
         if type(frequency_index) is not int:
