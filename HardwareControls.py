@@ -182,11 +182,11 @@ class Solenoid():
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
+                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 5)
             case 'Y':
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
+                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 5)
             case 'T':
                 # If a turntable is added, uncomment this section
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
@@ -196,10 +196,10 @@ class Solenoid():
                 print("Homing all motors")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT)
+                self.hal.pi.wait_for_event(self.X_LIMIT_EVENT, 5)
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT)
+                self.hal.pi.wait_for_event(self.Y_LIMIT_EVENT, 5)
             case _:
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
         self.x_limit.cancel()
@@ -281,18 +281,23 @@ class SCodeParse():
         print("Performing mneumonic match")
         match mneumonic:
             case 'MOVE':
+                print("Found case 'MOVE'")
                 move_state = state
                 self.commandMOVE(move_state)
             case 'PUMP':
+                print("Found case 'PUMP'")
                 pump_state = state
                 self.commandPUMP(pump_state)
             case 'VALV':
+                print("Found case 'VALV'")
                 valv_state = state
                 self.commandVALV(valv_state)
             case 'HOME':
+                print("Found case 'HOME'")
                 home_state = state
                 self.commandHOME(home_state)
             case 'SPRAY':
+                print("Found case 'SPRAY'")
                 spray_state = state
                 self.commandSPRAY(spray_state)
             case _:
@@ -320,7 +325,6 @@ class SCodeParse():
                 self.motor_solenoid.pumpOff()
                 print("Pump off")
             case 'On':
-                pump_index = int(state)
                 self.motor_solenoid.pumpOn()
                 print(f"Pump on")
             case _:
