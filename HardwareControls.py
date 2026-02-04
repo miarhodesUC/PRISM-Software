@@ -135,6 +135,7 @@ class Solenoid():
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
     def movingLimitHandling(self, gpio, level, tick): # ensures that motors don't get damaged by moving out of bounds
+            print("Limit switch triggered outside of homing routine")
             self.shutdown()
             raise SystemError("Limit switch triggered")
     def homingLimitHandling(self, gpio, level, tick):
