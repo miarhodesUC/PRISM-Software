@@ -228,7 +228,8 @@ class Solenoid():
         self.pumpOff()
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
         self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T, self.LOCOMOTIVE_DIRECTION_PIN)   
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T, self.LOCOMOTIVE_DIRECTION_PIN)
+        raise SystemError  
 
 class SCodeParse():
     # Fluid handling configs
