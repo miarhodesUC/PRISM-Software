@@ -30,6 +30,7 @@ import csv
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
         self.active_cycle = ActiveCycle
+        # Setting up base for app
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
@@ -39,13 +40,13 @@ class Ui_MainWindow(object):
         font.setPointSize(11)
         MainWindow.setFont(font)
 
+        # Central widget will be stacked to allow for multiple screens
         self.stackedWidget = QtWidgets.QStackedWidget(MainWindow)
         self.stackedWidget.setObjectName("stackedWidget")
         self.setupMainMenu()
         self.setupCycleEditor()
         self.setupSettings()
         self.stackedWidget.setCurrentIndex(0)
-
         MainWindow.setCentralWidget(self.stackedWidget)
         
         self.retranslateUi(MainWindow)
@@ -71,15 +72,16 @@ class Ui_MainWindow(object):
         self.button_addStep = QtWidgets.QPushButton(self.Add_Coating_Step)
         self.button_addStep.setGeometry(QtCore.QRect(4, 150, 331, 31))
         self.button_addStep.setObjectName("button_addStep")
+        self.button_addStep.setText("Add Step")
         self.button_addStep.clicked.connect(self.addStepWidget)
 
         self.selectCoating = QtWidgets.QComboBox(self.Add_Coating_Step)
         self.selectCoating.setGeometry(QtCore.QRect(150, 40, 181, 31))
         self.selectCoating.setObjectName("selectCoating")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
+        self.selectCoating.addItem("Reservoir 1")
+        self.selectCoating.addItem("Reservoir 2")
+        self.selectCoating.addItem("Reservoir 3")
+        self.selectCoating.addItem("Reservoir 4")
 
         self.lineEdit_numberOfCoats = QtWidgets.QLineEdit(self.Add_Coating_Step)
         self.lineEdit_numberOfCoats.setGeometry(QtCore.QRect(220, 90, 111, 31))
@@ -92,10 +94,12 @@ class Ui_MainWindow(object):
         self.label_selectCoating = QtWidgets.QLabel(self.Add_Coating_Step)
         self.label_selectCoating.setGeometry(QtCore.QRect(0, 40, 131, 31))
         self.label_selectCoating.setObjectName("label_selectCoating")
+        self.label_selectCoating.setText("Coating Solution: ")
 
         self.label_numberOfCoats = QtWidgets.QLabel(self.Add_Coating_Step)
         self.label_numberOfCoats.setGeometry(QtCore.QRect(0, 90, 191, 31))
         self.label_numberOfCoats.setObjectName("label_numberOfCoats")
+        self.label_numberOfCoats.setText("Number of Coats: ")
 
         self.Coating_Step_List = QtWidgets.QFrame(self.widget_CycleEditor)
         self.Coating_Step_List.setGeometry(QtCore.QRect(0, 0, 630, 500))
@@ -208,13 +212,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PRISM LbL"))
-        self.button_addStep.setText(_translate("MainWindow", "Add Step"))
-        self.selectCoating.setItemText(0, _translate("MainWindow", "Reservoir 1"))
-        self.selectCoating.setItemText(1, _translate("MainWindow", "Reservoir 2"))
-        self.selectCoating.setItemText(2, _translate("MainWindow", "Reservoir 3"))
-        self.selectCoating.setItemText(3, _translate("MainWindow", "Reservoir 4"))
-        self.label_selectCoating.setText(_translate("MainWindow", "Coating Solution:"))
-        self.label_numberOfCoats.setText(_translate("MainWindow", "Number of Coats:"))
     
     def loadStepWidget(self, coat_count, reservoir_index):
         self.unit_step = QWidget()
