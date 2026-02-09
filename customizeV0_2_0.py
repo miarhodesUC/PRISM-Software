@@ -50,8 +50,6 @@ class Ui_MainWindow(object):
         self.setupSettings()
         self.stackedWidget.setCurrentIndex(0)
         MainWindow.setCentralWidget(self.stackedWidget)
-        
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def setupCycleEditor(self):
         self.widget_CycleEditor = QtWidgets.QWidget()
