@@ -204,9 +204,9 @@ class Ui_MainWindow(object):
 
         self.stackedWidget.addWidget(self.widget_Settings)
 
-    def createButton(self, widget, text, coords, connected_method):
+    def createButton(self, widget: QWidget, text: str, geometry: list[int], connected_method: function):
         identity = QtWidgets.QPushButton(widget)
-        identity.setGeometry(QtCore.QRect(coords[0], coords[1], coords[2], coords[3]))
+        identity.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
         identity.setText(text)
         identity.clicked.connect(connected_method)
         return identity
