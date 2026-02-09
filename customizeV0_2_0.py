@@ -26,6 +26,7 @@ import csv
 
 # WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
+# TODO: Use json file for name configurations
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
@@ -36,6 +37,7 @@ class Ui_MainWindow(object):
         MainWindow.setEnabled(True)
         MainWindow.setWindowIcon(QtGui.QIcon("prism_icon.jpg"))
         MainWindow.resize(1024, 600)
+        MainWindow.setWindowTitle("PRISM LbL")
         font = QtGui.QFont()
         font.setPointSize(11)
         MainWindow.setFont(font)
@@ -49,7 +51,6 @@ class Ui_MainWindow(object):
         self.stackedWidget.setCurrentIndex(0)
         MainWindow.setCentralWidget(self.stackedWidget)
         
-        self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def setupCycleEditor(self):
@@ -208,10 +209,6 @@ class Ui_MainWindow(object):
         self.button_LoadSettings.clicked.connect(self.clickedLoadSettings)
 
         self.stackedWidget.addWidget(self.widget_Settings)
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "PRISM LbL"))
     
     def loadStepWidget(self, coat_count, reservoir_index):
         self.unit_step = QWidget()
