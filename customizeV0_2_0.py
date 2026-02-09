@@ -56,36 +56,30 @@ class Ui_MainWindow(object):
         self.widget_CycleEditor.setObjectName("widget_CycleEditor")
         font = QtGui.QFont()
 
-        self.Add_Coating_Step = QtWidgets.QFrame(self.widget_CycleEditor)
-        self.Add_Coating_Step.setGeometry(QtCore.QRect(640, 10, 361, 231))
-        self.Add_Coating_Step.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.Add_Coating_Step.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.Add_Coating_Step.setObjectName("Add_Coating_Step")
-
         self.label_numberOfCycles = self.createLabel(self.widget_CycleEditor, "Number of Cycles: ", [10, 460, 150, 30], font)
         self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
         self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 460, 50, 30))
 
-        self.button_addStep = self.createButton(self.Add_Coating_Step, "Add Step", [4, 150, 331, 31], self.addStepWidget)
+        self.button_addStep = self.createButton(self.widget_CycleEditor, "Add Step", [644, 160, 331, 31], self.addStepWidget)
 
-        self.selectCoating = QtWidgets.QComboBox(self.Add_Coating_Step)
-        self.selectCoating.setGeometry(QtCore.QRect(150, 40, 181, 31))
+        self.selectCoating = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectCoating.setGeometry(QtCore.QRect(790, 50, 181, 31))
         self.selectCoating.setObjectName("selectCoating")
         self.selectCoating.addItem("Reservoir 1")
         self.selectCoating.addItem("Reservoir 2")
         self.selectCoating.addItem("Reservoir 3")
         self.selectCoating.addItem("Reservoir 4")
 
-        self.lineEdit_numberOfCoats = QtWidgets.QLineEdit(self.Add_Coating_Step)
-        self.lineEdit_numberOfCoats.setGeometry(QtCore.QRect(220, 90, 111, 31))
+        self.lineEdit_numberOfCoats = QtWidgets.QLineEdit(self.widget_CycleEditor)
+        self.lineEdit_numberOfCoats.setGeometry(QtCore.QRect(860, 100, 111, 31))
         font.setPointSize(16)
         self.lineEdit_numberOfCoats.setFont(font)
         self.lineEdit_numberOfCoats.setText("")
         self.lineEdit_numberOfCoats.setObjectName("lineEdit_numberOfCoats")
 
         font.setPointSize(11)
-        self.label_selectCoating = self.createLabel(self.Add_Coating_Step, "Coating Solution: ", [0, 40, 131, 31], font)
-        self.label_numberOfCoats = self.createLabel(self.Add_Coating_Step, "Number of Coats: ", [0, 90, 191, 31], font)
+        self.label_selectCoating = self.createLabel(self.widget_CycleEditor, "Coating Solution: ", [640, 50, 131, 31], font)
+        self.label_numberOfCoats = self.createLabel(self.widget_CycleEditor, "Number of Coats: ", [640, 140, 191, 31], font)
 
         self.Coating_Step_List = QtWidgets.QFrame(self.widget_CycleEditor)
         self.Coating_Step_List.setGeometry(QtCore.QRect(0, 0, 630, 500))
