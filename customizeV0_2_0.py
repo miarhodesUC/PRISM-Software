@@ -141,11 +141,7 @@ class Ui_MainWindow(object):
         self.label_Title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.label_Title.setFont(font)
 
-        self.button_Start = QtWidgets.QPushButton(self.widget_MainMenu)
-        self.button_Start.setGeometry(QtCore.QRect(412, 300, 200, 40))
-        self.button_Start.setObjectName("button_Start")
-        self.button_Start.setText("Start")
-        self.button_Start.clicked.connect(self.clickedStart)
+        self.button_Start = self.createButton(self.widget_MainMenu, "Start", [412, 300, 200, 40], self.clickedStart)
 
         self.button_Settings = QtWidgets.QPushButton(self.widget_MainMenu)
         self.button_Settings.setGeometry(QtCore.QRect(412, 400, 200, 40))
@@ -207,6 +203,13 @@ class Ui_MainWindow(object):
         self.button_LoadSettings.clicked.connect(self.clickedLoadSettings)
 
         self.stackedWidget.addWidget(self.widget_Settings)
+
+    def createButton(self, widget, text, coords, connected_method):
+        identity = QtWidgets.QPushButton(widget)
+        identity.setGeometry(QtCore.QRect(coords[0], coords[1], coords[2], coords[3]))
+        identity.setText(text)
+        identity.clicked.connect(connected_method)
+        return identity
     
     def loadStepWidget(self, coat_count, reservoir_index):
         self.unit_step = QWidget()
