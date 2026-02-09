@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
         self.label_Title.setFont(font)
 
         self.button_Start = self.createButton(self.widget_MainMenu, "Start", [412, 300, 200, 40], self.clickedStart)
-
+        self.button_Settings = self.createButton(self.widget_MainMenu, "Settings", [412, 400, 200, 40], self.clickedSettings)
         self.button_Settings = QtWidgets.QPushButton(self.widget_MainMenu)
         self.button_Settings.setGeometry(QtCore.QRect(412, 400, 200, 40))
         self.button_Settings.setObjectName("button_Settings")
@@ -208,6 +208,7 @@ class Ui_MainWindow(object):
         identity = QtWidgets.QPushButton(widget)
         identity.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
         identity.setText(text)
+        identity.setObjectName("button_" + text)
         identity.clicked.connect(connected_method)
         return identity
     
