@@ -170,6 +170,7 @@ class Ui_MainWindow(object):
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
+        font = QtGui.QFont()
 
         self.unit_step.setProperty("reservoir_index", reservoir_index)
         self.unit_step.setProperty("coat_count", coat_count)
@@ -177,23 +178,14 @@ class Ui_MainWindow(object):
         self.selectCoating.setCurrentIndex(reservoir_index)
         coating_solution = self.selectCoating.currentText()
 
-        self.label_Solution = QLabel(self.unit_step)
-        self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
+        self.label_Solution = self.createLabel(self.unit_step, f"Res {reservoir_index} - {coating_solution}", 
+                                               [18, 9, 191, 31], font)
         self.label_Solution.setAutoFillBackground(True)
-        self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
 
-        self.label_Coats = QtWidgets.QLabel(self.unit_step)
-        self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
+        self.label_Coats = self.createLabel(self.unit_step, f"Coats: {coat_count}", [238, 10, 121, 31], font)
         self.label_Coats.setAutoFillBackground(True)
-        self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(coat_count))
 
-        self.button_delete = QtWidgets.QPushButton(self.unit_step)
-        self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
-        self.button_delete.setObjectName("button_delete")
-        self.button_delete.setText("Delete")
-        self.button_delete.clicked.connect(self.unit_step.deleteLater)
+        self.button_delete = self.createButton(self.unit_step, "Delete", [510, 13, 75, 31], self.unit_step.deleteLater)
 
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
 
@@ -205,32 +197,21 @@ class Ui_MainWindow(object):
             return
         coating_solution = self.selectCoating.currentText()
         reservoir_index = self.selectCoating.currentIndex()
-
+        font = QtGui.QFont()
+        # initializing coating step widget and assigning information unique to it
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
         self.unit_step.setProperty("reservoir_index", reservoir_index)
         self.unit_step.setProperty("coat_count", coat_count)
-
-        self.label_Solution = QLabel(self.unit_step)
-        self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
+        # adding display information to the widget
+        self.label_Solution = self.createLabel(self.unit_step, f"Res {reservoir_index} - {coating_solution}", 
+                                               [18, 9, 191, 31], font)
         self.label_Solution.setAutoFillBackground(True)
-        self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
-
-        self.label_Coats = QtWidgets.QLabel(self.unit_step)
-        self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
+        self.label_Coats = self.createLabel(self.unit_step, f"Coats: {coat_count}", [238, 10, 121, 31], font)
         self.label_Coats.setAutoFillBackground(True)
-        self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(coat_count))
-
-        self.button_delete = QtWidgets.QPushButton(self.unit_step)
-        self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
-        self.button_delete.setObjectName("button_delete")
-        self.button_delete.setText("Delete")
-        self.button_delete.clicked.connect(self.unit_step.deleteLater)
-
+        self.button_delete = self.createButton(self.unit_step, "Delete", [510, 13, 75, 31], font, self.unit_step.deleteLater)
 
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
     
@@ -241,15 +222,15 @@ class Ui_MainWindow(object):
             print("Incorrect value in number of cycles")
             return 0
         step_count = self.Coating_Step_List_Layout.count()
-        arr_coat_count = [0] * step_count
-        arr_reservoir = [0] * step_count
-        for step in range(step_count):
-            active_step = self.Coating_Step_List_Layout.itemAt(step).widget()
-            coating_count = active_step.property("coat_count")
-            arr_coat_count[step] = coating_count
+        arr_coat_count = [0] * step_count # initializes coat count array with correct size
+        arr_reservoir = [0] * step_count # initializes reservoir array with correct size
+        for step in range(step_count): # grabs data from each coating step widget
+            active_step = self.Coating_Step_List_Layout.itemAt(step).widget() # pulls up the coating step widget for this step
+            coating_count = active_step.property("coat_count") # gets the coat count for this step
+            arr_coat_count[step] = coating_count # puts data in array for consolidation
 
-            reservoir_index = active_step.property("reservoir_index")
-            arr_reservoir[step] = reservoir_index
+            reservoir_index = active_step.property("reservoir_index") # gets the reservoir for this step
+            arr_reservoir[step] = reservoir_index # puts data in array for consolidation
 
             print("Step #{0} : Coat count = {1} : Reservoir index = {2}".format(step, coating_count, reservoir_index))
         
@@ -308,7 +289,6 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(1, text_res2)
         self.selectCoating.setItemText(2, text_res3)
         self.selectCoating.setItemText(3, text_res4)
-        
     
     def clickedSaveCycleEditor(self):
         self.gatherCycleSettings()
