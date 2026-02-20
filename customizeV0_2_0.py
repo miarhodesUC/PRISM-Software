@@ -23,7 +23,8 @@ from PyQt5.QtCore import Qt
 import CycleEditor
 from CycleEditor import CoatCycle
 import csv
-
+import os
+import Firmware as firmware
 # WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
 # TODO: Use json file for name configurations
@@ -56,11 +57,18 @@ class Ui_MainWindow(object):
         self.widget_CycleEditor.setObjectName("widget_CycleEditor")
         font = QtGui.QFont()
 
+        self.createLabel(self.widget_CycleEditor, "Nozzle Path: ", [220, 500, 100, 30], font)
+        self.selectPathing = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectPathing.setGeometry(QtCore.QRect(325, 500, 180, 30))
+        self.selectPathing.setObjectName("selectCoating")
+        self.selectPathing.addItems(self.active_cycle.nozzle_paths)
+
         self.label_numberOfCycles = self.createLabel(self.widget_CycleEditor, "Number of Cycles: ", [10, 500, 150, 30], font)
         self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
         self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 500, 50, 30))
 
         self.button_addStep = self.createButton(self.widget_CycleEditor, "Add Step", [644, 160, 331, 31], self.addStepWidget)
+
 
         self.selectCoating = QtWidgets.QComboBox(self.widget_CycleEditor)
         self.selectCoating.setGeometry(QtCore.QRect(790, 50, 181, 31))
@@ -146,6 +154,8 @@ class Ui_MainWindow(object):
         self.button_SaveSettings = self.createButton(self.widget_Settings, "Save", [810, 450, 150, 40], self.clickedSaveSettings)
         self.button_LoadSettings = self.createButton(self.widget_Settings, "Load", [810, 400, 150, 40], self.clickedLoadSettings)
 
+        self.clickedLoadSettings() # Loads the reservoir names
+
         self.stackedWidget.addWidget(self.widget_Settings)
 
     def createButton(self, widget: QWidget, text: str, geometry: list[int], connected_method):
@@ -221,6 +231,7 @@ class Ui_MainWindow(object):
         except ValueError:
             print("Incorrect value in number of cycles")
             return 0
+        nozzle_path = self.selectPathing.currentText()
         step_count = self.Coating_Step_List_Layout.count()
         arr_coat_count = [0] * step_count # initializes coat count array with correct size
         arr_reservoir = [0] * step_count # initializes reservoir array with correct size
@@ -233,11 +244,24 @@ class Ui_MainWindow(object):
             arr_reservoir[step] = reservoir_index # puts data in array for consolidation
 
             print("Step #{0} : Coat count = {1} : Reservoir index = {2}".format(step, coating_count, reservoir_index))
-        
-        self.step_count = step_count
-        self.cycle_count = cycle_count
-        self.arr_coat_count = arr_coat_count
-        self.arr_reservoir = arr_reservoir
+
+        self.createCoatVector(step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path)
+
+    def createCoatVector(self, step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path):
+        self.coat_vector = [step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path]
+        self.loadCoatVector()
+
+    def updateCycleEditor(self):
+        self.gatherCycleSettings()
+        self.active_cycle.coat_vector = self.coat_vector
+        self.active_cycle.loadCoatVector()
+
+    def loadCoatVector(self):
+        self.step_count = self.coat_vector[2][0]
+        self.cycle_count = self.coat_vector[2][1]
+        self.arr_reservoir = self.coat_vector[0]
+        self.arr_coat_count = self.coat_vector[1]
+        self.nozzle_path = self.coat_vector[3]
 
     def clickedHome(self):
         self.stackedWidget.setCurrentIndex(0)
@@ -268,6 +292,7 @@ class Ui_MainWindow(object):
             writer = csv.writer(file)
             writer.writerow(save_vector)
             print("Settings data saved to SavedSettings.csv")
+    
     def clickedLoadSettings(self):
         str_line = []
         with open("SavedSettings.csv", "r") as file:
@@ -291,30 +316,24 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(3, text_res4)
     
     def clickedSaveCycleEditor(self):
-        self.gatherCycleSettings()
-        self.active_cycle.loadCycleSettings(self.cycle_count, self.step_count, self.arr_reservoir, self.arr_coat_count)
+        self.updateCycleEditor()
+        self.active_cycle.loadCoatVector()
         self.active_cycle.generateSaveFile()
 
     def clickedStartCycle(self):
         print("Beginning coating cycle...\n")
-        self.gatherCycleSettings()
-        self.active_cycle.loadCycleSettings(self.cycle_count,
-                                            self.step_count,
-                                            self.arr_reservoir,
-                                            self.arr_coat_count)
-        print("Cycle executor not yet implemented, print dummy will be used instead\n")
+        self.updateCycleEditor()
+        self.active_cycle.loadCoatVector()
         self.active_cycle.executeCycle()
 
     def clickedLoadCycle(self):
         self.active_cycle.loadSaveFile()
-        self.step_count = self.active_cycle.step_count
-        self.cycle_count = self.active_cycle.cycle_count
-        self.arr_reservoir = self.active_cycle.arr_reservoir
-        self.arr_coat_count = self.active_cycle.arr_coat_count
-
+        self.coat_vector = self.active_cycle.coat_vector
+        self.loadCoatVector()
         for step in range(self.step_count):
             self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
         self.lineEdit_numberOfCycles.setText(str(self.cycle_count))
+        self.selectPathing.setCurrentText(self.nozzle_path)
         
 if __name__ == "__main__":
     import sys

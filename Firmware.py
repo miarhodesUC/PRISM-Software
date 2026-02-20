@@ -95,7 +95,8 @@ class Solenoid():
     DUTY_CYCLE_QUARTER = 64
     DUTY_CYCLE_OFF = 0
 
-    PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
+    PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 
+                          320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 0
     VALVE_FREQUENCY_INDEX = 1
 
@@ -128,12 +129,14 @@ class Solenoid():
     RESERVOIR_SELECT_LOWBIT = 5
     AIR_VALVE_PIN = 25
 
-    def __init__(self, hal = HAL()):
+    def __init__(self, config_file:str, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
+    def importConfigs(self, config_file:str):
+        pass
 
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
@@ -158,7 +161,7 @@ class Solenoid():
         if self.hal.pi.wait_for_edge(limit_pin, self.FALLING_EDGE, time_value_s): #times out after desired movement time
             print("Limit switch triggered")
             self.shutdown()
-        # time.sleep(time_value_s) # there's probably a better way to do this -> there's actually a worse ^
+        # time.sleep(time_value_s) # there's probably a better way to do this -> update: there's actually a worse ^
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
         match axis:
@@ -224,18 +227,13 @@ class SCodeParse():
     # Fluid handling configs
     PURGE_TIME = 10 #dummy value
     FLUID_LATENCY = 10 #dummy value
-    def __init__(self, path_file : str, coating_routine : str, Solenoid = Solenoid()):
-        self.pathfile = path_file
-        self.routine = coating_routine
-        self.command_vector = []
+    def __init__(self, Solenoid = Solenoid()):
         self.motor_solenoid = Solenoid
-        print("Initalization complete, starting coating sequence...")
-        self.startSequence()
-        print("Complete")
+        self.command_vector = []
 
-    def startSequence(self):
-        self.splitPathFile()
-        self.loadCoatCycle()
+    def startSequence(self, coat_vector):
+        self.loadCoatCycle(coat_vector)
+        self.splitPathFile(self.nozzle_path)
         self.executeCoatCycle()
     
     def executeCoatCycle(self):
@@ -247,21 +245,15 @@ class SCodeParse():
                 # also need to determine how long to clear spray
                 self.pathIterator()
     
-    def loadCoatCycle(self):
-        coat_vector = []
-        with open(self.routine, "r") as file:
-            content = csv.reader(file)
-            for line in content:
-                int_line = [int(s) for s in line]
-                coat_vector.append(int_line)
-                print(int_line)
+    def loadCoatCycle(self, coat_vector):
         self.step_count = coat_vector[2][0]
         self.cycle_count = coat_vector[2][1]
         self.arr_reservoir = coat_vector[0]
         self.arr_coat_count = coat_vector[1]
+        self.nozzle_path = coat_vector[3]
 
-    def splitPathFile(self):
-        with open(self.pathfile, "r") as file:
+    def splitPathFile(self, pathfile):
+        with open(pathfile, "r") as file:
             content = csv.reader(file)
             for line in content:
                 split_line = [s for s in line]

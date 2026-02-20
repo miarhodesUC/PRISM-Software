@@ -2,7 +2,7 @@
 import numpy as np
 import time
 import pytest
-from HardwareControls import HAL
+from Firmware import HAL
 from numpy import heaviside as u
 from pigpio_shell import pigpio_shell
 

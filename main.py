@@ -7,7 +7,7 @@ from pigpio_shell import pigpio_shell as shell
 import csv
 import time
 from numpy import heaviside as u
-from HardwareControls import HAL, Solenoid, SCodeParse
+from Firmware import HAL, Solenoid, SCodeParse
 
 def generateTestFile(file_name, save_vector):
     with open(file_name, "w", newline="") as file:

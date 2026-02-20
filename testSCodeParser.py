@@ -1,5 +1,5 @@
 import HAL_shell
-from HardwareControls import SCodeParse, motor_solenoid_shell
+from Firmware import SCodeParse, motor_solenoid_shell
 from pigpio_shell import pigpio_shell as pi
 import csv
 import time
