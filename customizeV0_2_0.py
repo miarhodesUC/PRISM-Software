@@ -25,6 +25,7 @@ from CycleEditor import CoatCycle
 import csv
 import os
 import Firmware as firmware
+from pigpio_shell import pigpio_shell as shell
 # WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
 # TODO: Use json file for name configurations
@@ -61,7 +62,7 @@ class Ui_MainWindow(object):
         self.selectPathing = QtWidgets.QComboBox(self.widget_CycleEditor)
         self.selectPathing.setGeometry(QtCore.QRect(325, 500, 180, 30))
         self.selectPathing.setObjectName("selectCoating")
-        self.selectPathing.addItems(self.active_cycle.nozzle_paths)
+        self.selectPathing.addItems(self.active_cycle.nozzle_path_list)
 
         self.label_numberOfCycles = self.createLabel(self.widget_CycleEditor, "Number of Cycles: ", [10, 500, 150, 30], font)
         self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
@@ -96,15 +97,23 @@ class Ui_MainWindow(object):
         self.Coating_Step_List.setObjectName("Coating_Step_List")
         self.Coating_Step_List_Layout = QVBoxLayout(self.Coating_Step_List)
 
+        self.selectCycle = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectCycle.setGeometry(QtCore.QRect(810, 340, 150, 40))
+        self.selectCycle.setObjectName("selectCycle")
+        self.selectCycle.addItems(self.active_cycle.coat_cycle_list)
+
         self.button_Home_CycleEditor = self.createButton(self.widget_CycleEditor, "Return Home", 
                                                          [640, 460, 150, 40], self.clickedHome)
         self.button_SaveCycleEditor = self.createButton(self.widget_CycleEditor, "Save", 
                                                         [810, 460, 150, 40], self.clickedSaveCycleEditor)
         self.button_StartCycle = self.createButton(self.widget_CycleEditor, "Start Cycle", 
                                                    [640, 400, 320, 50], self.clickedStartCycle)
-        self.button_LoadCycle = self.createButton(self.widget_CycleEditor, "Load Saved Cycle",
-                                                  [640, 340, 320, 50], self.clickedLoadCycle)
-
+        self.button_LoadCycle = self.createButton(self.widget_CycleEditor, "Load Cycle",
+                                                  [640, 340, 150, 40], self.clickedLoadCycle)
+        self.label_SaveFileName = self.createLabel(self.widget_CycleEditor, "Save File Name: ", 
+                                                   [640, 520, 130, 40], font)
+        self.lineEdit_SaveFileName = QtWidgets.QLineEdit(self.widget_CycleEditor)
+        self.lineEdit_SaveFileName.setGeometry(QtCore.QRect(770, 520, 190, 30))
         self.stackedWidget.addWidget(self.widget_CycleEditor)
 
     def setupMainMenu(self):
@@ -248,20 +257,20 @@ class Ui_MainWindow(object):
         self.createCoatVector(step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path)
 
     def createCoatVector(self, step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path):
-        self.coat_vector = [step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path]
+        self.coat_vector = [arr_reservoir, arr_coat_count, [step_count, cycle_count], [nozzle_path]]
         self.loadCoatVector()
-
-    def updateCycleEditor(self):
-        self.gatherCycleSettings()
-        self.active_cycle.coat_vector = self.coat_vector
-        self.active_cycle.loadCoatVector()
 
     def loadCoatVector(self):
         self.step_count = self.coat_vector[2][0]
         self.cycle_count = self.coat_vector[2][1]
         self.arr_reservoir = self.coat_vector[0]
         self.arr_coat_count = self.coat_vector[1]
-        self.nozzle_path = self.coat_vector[3]
+        self.nozzle_path = self.coat_vector[3][0]
+
+    def updateCycleEditor(self):
+        self.gatherCycleSettings()
+        self.active_cycle.coat_vector = self.coat_vector
+        self.active_cycle.loadCoatVector()
 
     def clickedHome(self):
         self.stackedWidget.setCurrentIndex(0)
@@ -318,7 +327,9 @@ class Ui_MainWindow(object):
     def clickedSaveCycleEditor(self):
         self.updateCycleEditor()
         self.active_cycle.loadCoatVector()
-        self.active_cycle.generateSaveFile()
+        savefilename = self.lineEdit_SaveFileName.text()
+        self.active_cycle.generateSaveFile(savefilename)
+        self.selectCycle.addItem(f"{savefilename}")
 
     def clickedStartCycle(self):
         print("Beginning coating cycle...\n")
@@ -327,7 +338,8 @@ class Ui_MainWindow(object):
         self.active_cycle.executeCycle()
 
     def clickedLoadCycle(self):
-        self.active_cycle.loadSaveFile()
+        filename = self.selectCycle.currentText()
+        self.active_cycle.loadSaveFile(filename)
         self.coat_vector = self.active_cycle.coat_vector
         self.loadCoatVector()
         for step in range(self.step_count):

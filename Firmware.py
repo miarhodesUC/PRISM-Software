@@ -1,4 +1,4 @@
-import pigpio
+# import pigpio
 import serial
 from pigpio_shell import pigpio_shell as shell
 import csv
@@ -11,7 +11,7 @@ from enum import Enum
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    def __init__(self, pi=pigpio.pi()):
+    def __init__(self, pi=shell()):
         self.pi = pi
     def checkPin(self, pin, method): # raises errors early
         if type(pin) is not int:
@@ -81,9 +81,9 @@ class HAL(): # Contains basic GPIO commands
         self.setPinLow(direction_pin)
         print(f"Stopping motor pin {step_pin}")
     def setAsInput(self, pin):
-        self.pi.set_mode(pin, pigpio.INPUT)
+        self.pi.set_mode(pin, 0)
     def setAsOutput(self, pin):
-        self.pi.set_mode(pin, pigpio.OUTPUT)
+        self.pi.set_mode(pin, 1)
 
 class Solenoid():
     #DIRECTION
@@ -129,7 +129,7 @@ class Solenoid():
     RESERVOIR_SELECT_LOWBIT = 5
     AIR_VALVE_PIN = 25
 
-    def __init__(self, config_file:str, hal = HAL()):
+    def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
@@ -231,9 +231,9 @@ class SCodeParse():
         self.motor_solenoid = Solenoid
         self.command_vector = []
 
-    def startSequence(self, coat_vector):
+    def startSequence(self, pathfile, coat_vector):
         self.loadCoatCycle(coat_vector)
-        self.splitPathFile(self.nozzle_path)
+        self.splitPathFile(pathfile)
         self.executeCoatCycle()
     
     def executeCoatCycle(self):
@@ -346,7 +346,7 @@ class SCodeParse():
                 duty_cycle = int(state)
                 self.motor_solenoid.pwmAirValve(duty_cycle)
                 print(f"Modulating air compressor at {duty_cycle/255}")
-
+'''
 class I2C():
     I2C_BUS = 1
     def __init__(self, i2c_address):
@@ -382,4 +382,6 @@ class I2C():
         print("Writing to register: {}".format(register_address))
         self.i2cTransmit(register_address)
         self.i2cTransmit(tx_data)
+'''
+
 
