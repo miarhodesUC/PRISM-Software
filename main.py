@@ -37,7 +37,7 @@ def main():
     ])
     '''
     test = SCodeParse()
-    test.commandMOVE('X1200')
+    test.commandMOVE('Y1200')
     #motor = Solenoid()
     #motor.moveMotor(1200, 'X')
 if __name__ == "__main__":
