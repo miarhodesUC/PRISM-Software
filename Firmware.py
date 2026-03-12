@@ -169,7 +169,7 @@ class Solenoid():
             print("Limit switch triggered")
             self.shutdown()
         # time.sleep(time_value_s) # there's probably a better way to do this -> update: there's actually a worse way :3 ^
-        self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.hal.stopStepperMotor(step_pin, direction_pin)
     def homeMotor(self, axis:str): # resets motors to origin
         match axis:
             case 'X':

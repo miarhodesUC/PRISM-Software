@@ -36,7 +36,7 @@ def main():
          [4, 2]
     ])
     '''
-    test_session = SCodeParse(Solenoid(HAL(pigpio.pi())))
-    test_session.commandMOVE('Y-1600')
+    motor = Solenoid()
+    motor.moveMotor(1600, 'X')
 if __name__ == "__main__":
     main()
