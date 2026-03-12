@@ -97,8 +97,8 @@ class Solenoid():
 
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 
                           320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    PWM_FREQUENCY_INDEX = 0
-    VALVE_FREQUENCY_INDEX = 1
+    PWM_FREQUENCY_INDEX = 11
+    VALVE_FREQUENCY_INDEX = 11
 
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
@@ -128,6 +128,7 @@ class Solenoid():
     RESERVOIR_SELECT_HIGHBIT = 6
     RESERVOIR_SELECT_LOWBIT = 5
     AIR_VALVE_PIN = 25
+    
 
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
@@ -161,7 +162,7 @@ class Solenoid():
         if self.hal.pi.wait_for_edge(limit_pin, self.FALLING_EDGE, time_value_s): #times out after desired movement time
             print("Limit switch triggered")
             self.shutdown()
-        # time.sleep(time_value_s) # there's probably a better way to do this -> update: there's actually a worse ^
+        # time.sleep(time_value_s) # there's probably a better way to do this -> update: there's actually a worse way :3 ^
         self.hal.stopStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN)
     def homeMotor(self, axis:str): # resets motors to origin
         match axis:
