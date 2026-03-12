@@ -37,6 +37,7 @@ def main():
     ])
     '''
     motor = Solenoid()
-    motor.moveMotor(1600, 'X')
+    motor.moveMotor(1600, 'Y')
+    motor.moveMotor(-1600, 'Y')
 if __name__ == "__main__":
     main()
