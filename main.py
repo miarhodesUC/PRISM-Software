@@ -38,8 +38,8 @@ def main():
     '''
     test_session = SCodeParse(Solenoid(HAL(pigpio.pi())))
     test_session.commandPUMP('On')
-    test_session.commandMOVE('X40')
-    test_session.commandMOVE('Y30')
+    test_session.commandMOVE('X100')
+    test_session.commandMOVE('Y100')
     test_session.commandPUMP('Off')
 if __name__ == "__main__":
     main()
