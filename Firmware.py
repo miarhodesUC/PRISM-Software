@@ -1,6 +1,7 @@
 # import pigpio
 import serial
 from pigpio_shell import pigpio_shell as shell
+import pigpio 
 import csv
 import time
 from numpy import heaviside as u
@@ -11,7 +12,7 @@ from enum import Enum
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    def __init__(self, pi=shell()):
+    def __init__(self, pi=pigpio.pi()):
         self.pi = pi
     def checkPin(self, pin, method): # raises errors early
         if type(pin) is not int:
