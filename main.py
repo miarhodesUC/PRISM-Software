@@ -36,9 +36,7 @@ def main():
          [4, 2]
     ])
     '''
-    motor = Solenoid()
-    motor.pumpOn()
-    time.sleep(3)
-    motor.pumpOff()
+    test = SCodeParse()
+    test.commandMOVE('X1200')
 if __name__ == "__main__":
     main()
