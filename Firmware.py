@@ -119,15 +119,17 @@ class Solenoid():
     MOVING_LIMIT_EVENT = 3
     #LOCOMOTIVE MOTORS
     LOCOMOTIVE_DIRECTION_PIN = 17
-    LOCOMOTIVE_STEP_PIN_X = 27
-    LOCOMOTIVE_STEP_PIN_Y = 22
-    LOCOMOTIVE_STEP_PIN_T = 18
+    DIRECTION_PIN_X = 20
+    DIRECTION_PIN_Y = 6
+    LOCOMOTIVE_STEP_PIN_X = 12
+    LOCOMOTIVE_STEP_PIN_Y = 9
+    LOCOMOTIVE_STEP_PIN_T = 5
 
     #SPRAY MOTORS
     PERISTALTIC_STEP_PIN = 13
-    RESERVOIR_SELECT_HIGHBIT = 6
-    RESERVOIR_SELECT_LOWBIT = 5
-    AIR_VALVE_PIN = 25
+    RESERVOIR_SELECT_HIGHBIT = 21
+    RESERVOIR_SELECT_LOWBIT = 16
+    AIR_VALVE_PIN = 26
     
 
     def __init__(self, hal = HAL()):
@@ -146,18 +148,21 @@ class Solenoid():
             case 'X':
                 print("Moving X")
                 step_pin = self.LOCOMOTIVE_STEP_PIN_X
+                direction_pin = self.DIRECTION_PIN_X
                 limit_pin = self.X_SWITCH_PIN
             case 'Y':
                 print("Moving Y")
                 step_pin = self.LOCOMOTIVE_STEP_PIN_Y
+                direction_pin = self.DIRECTION_PIN_Y
                 limit_pin = self.Y_SWITCH_PIN
             case 'T':
+                direction_pin = self.LOCOMOTIVE_DIRECTION_PIN
                 step_pin = self.LOCOMOTIVE_STEP_PIN_T
             case _:
                 raise ValueError("Error in moveMotor: {} is an invalid axis".format(axis))
         time_value_s = abs(distance_value) / (self.STEP_MODE_VALUE * 
                                               self.PWM_FREQUENCY_LIST[self.PWM_FREQUENCY_INDEX] * self.DISTANCE_PER_STEP)
-        self.hal.moveStepperMotor(step_pin, self.LOCOMOTIVE_DIRECTION_PIN, 
+        self.hal.moveStepperMotor(step_pin, direction_pin, 
                                   u(-distance_value, 0), self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
         if self.hal.pi.wait_for_edge(limit_pin, self.FALLING_EDGE, time_value_s): #times out after desired movement time
             print("Limit switch triggered")
@@ -168,20 +173,20 @@ class Solenoid():
         match axis:
             case 'X':
                 print("Homing X")
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
+                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.X_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
-                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
+                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
                 else:
                     raise TimeoutError("Homing not complete")
             case 'Y':
                 print("Homing Y")
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
+                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.Y_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
-                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
+                    self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
                 else:
                     raise TimeoutError("Homing not complete")
             case 'T':
@@ -189,9 +194,10 @@ class Solenoid():
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
                 # switch_pin = self.T_SWITCH_PIN
                 print("Homing T not yet implemented")
+                ''' # Removing case ALL, not needed
             case 'ALL':
                 print("Homing all motors")
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN, 
+                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.LOCOMOTIVE_STEP_PIN_X, self.FALLING_EDGE):
                     print("Limit switch event detected")
@@ -203,7 +209,8 @@ class Solenoid():
                     print("Limit switch event detected")
                 else:
                     raise TimeoutError("Homing not complete")
-            case _:
+                '''
+            case _:    
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
     def pumpOn(self):
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
@@ -219,9 +226,8 @@ class Solenoid():
         print("Shutting down")
         self.closeAirValve()
         self.pumpOff()
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.LOCOMOTIVE_DIRECTION_PIN)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN)
-        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_T, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
+        self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
         raise SystemError("Shutdown sequence called")
 
 class SCodeParse():
