@@ -37,7 +37,8 @@ def main():
     ])
     '''
     motor = Solenoid()
-    motor.moveMotor(1600, 'Y')
-    motor.moveMotor(-1600, 'Y')
+    motor.pumpOn()
+    time.sleep(3)
+    motor.pumpOff()
 if __name__ == "__main__":
     main()
