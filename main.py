@@ -41,5 +41,6 @@ def main():
     test_session.commandMOVE('X800')
     test_session.commandMOVE('Y800')
     test_session.commandPUMP('Off')
+    test_session.motor_solenoid.shutdown()
 if __name__ == "__main__":
     main()
