@@ -23,95 +23,72 @@ from PyQt5.QtCore import Qt
 import CycleEditor
 from CycleEditor import CoatCycle
 import csv
-
+import os
+import Firmware as firmware
+from pigpio_shell import pigpio_shell as shell
 # WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
+# TODO: Use json file for name configurations
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
         self.active_cycle = ActiveCycle
+        # Setting up base for app
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowModality(QtCore.Qt.NonModal)
         MainWindow.setEnabled(True)
         MainWindow.setWindowIcon(QtGui.QIcon("prism_icon.jpg"))
         MainWindow.resize(1024, 600)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
+        MainWindow.setWindowTitle("PRISM LbL")
         font = QtGui.QFont()
         font.setPointSize(11)
         MainWindow.setFont(font)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
-        self.horizontalLayout.setObjectName("horizontalLayout")
 
-        self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
+        # Central widget will be stacked to allow for multiple screens
+        self.stackedWidget = QtWidgets.QStackedWidget(MainWindow)
         self.stackedWidget.setObjectName("stackedWidget")
         self.setupMainMenu()
         self.setupCycleEditor()
         self.setupSettings()
-        self.horizontalLayout.addWidget(self.stackedWidget)
         self.stackedWidget.setCurrentIndex(0)
-
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1022, 26))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.setCentralWidget(self.stackedWidget)
 
     def setupCycleEditor(self):
         self.widget_CycleEditor = QtWidgets.QWidget()
         self.widget_CycleEditor.setObjectName("widget_CycleEditor")
-
-        self.label_numberOfCycles = QLabel(self.widget_CycleEditor)
-        self.label_numberOfCycles.setGeometry(QtCore.QRect(10, 460, 150, 30))
-        self.label_numberOfCycles.setText("Number of Cycles:")
-        self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
-        self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 460, 50, 30))
-
-        self.Add_Coating_Step = QtWidgets.QFrame(self.widget_CycleEditor)
-        self.Add_Coating_Step.setGeometry(QtCore.QRect(640, 10, 361, 231))
-        self.Add_Coating_Step.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.Add_Coating_Step.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.Add_Coating_Step.setObjectName("Add_Coating_Step")
-
-        
-        self.button_addStep = QtWidgets.QPushButton(self.Add_Coating_Step)
-        self.button_addStep.setGeometry(QtCore.QRect(4, 150, 331, 31))
-        self.button_addStep.setObjectName("button_addStep")
-        self.button_addStep.clicked.connect(self.addStepWidget)
-
-        self.selectCoating = QtWidgets.QComboBox(self.Add_Coating_Step)
-        self.selectCoating.setGeometry(QtCore.QRect(150, 40, 181, 31))
-        self.selectCoating.setObjectName("selectCoating")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
-        self.selectCoating.addItem("")
-
-        self.lineEdit_numberOfCoats = QtWidgets.QLineEdit(self.Add_Coating_Step)
-        self.lineEdit_numberOfCoats.setGeometry(QtCore.QRect(220, 90, 111, 31))
         font = QtGui.QFont()
+
+        self.createLabel(self.widget_CycleEditor, "Nozzle Path: ", [220, 500, 100, 30], font)
+        self.selectPathing = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectPathing.setGeometry(QtCore.QRect(325, 500, 180, 30))
+        self.selectPathing.setObjectName("selectCoating")
+        self.selectPathing.addItems(self.active_cycle.nozzle_path_list)
+
+        self.label_numberOfCycles = self.createLabel(self.widget_CycleEditor, "Number of Cycles: ", [10, 500, 150, 30], font)
+        self.lineEdit_numberOfCycles = QtWidgets.QLineEdit(self.widget_CycleEditor)
+        self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 500, 50, 30))
+
+        self.button_addStep = self.createButton(self.widget_CycleEditor, "Add Step", [644, 160, 331, 31], self.addStepWidget)
+
+
+        self.selectCoating = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectCoating.setGeometry(QtCore.QRect(790, 50, 181, 31))
+        self.selectCoating.setObjectName("selectCoating")
+        self.selectCoating.addItem("Reservoir 1")
+        self.selectCoating.addItem("Reservoir 2")
+        self.selectCoating.addItem("Reservoir 3")
+        self.selectCoating.addItem("Reservoir 4")
+
+        self.lineEdit_numberOfCoats = QtWidgets.QLineEdit(self.widget_CycleEditor)
+        self.lineEdit_numberOfCoats.setGeometry(QtCore.QRect(860, 100, 111, 31))
         font.setPointSize(16)
         self.lineEdit_numberOfCoats.setFont(font)
         self.lineEdit_numberOfCoats.setText("")
         self.lineEdit_numberOfCoats.setObjectName("lineEdit_numberOfCoats")
 
-        self.label_selectCoating = QtWidgets.QLabel(self.Add_Coating_Step)
-        self.label_selectCoating.setGeometry(QtCore.QRect(0, 40, 131, 31))
-        self.label_selectCoating.setObjectName("label_selectCoating")
-
-        self.label_numberOfCoats = QtWidgets.QLabel(self.Add_Coating_Step)
-        self.label_numberOfCoats.setGeometry(QtCore.QRect(0, 90, 191, 31))
-        self.label_numberOfCoats.setObjectName("label_numberOfCoats")
+        font.setPointSize(11)
+        self.label_selectCoating = self.createLabel(self.widget_CycleEditor, "Coating Solution: ", [640, 60, 131, 31], font)
+        self.label_numberOfCoats = self.createLabel(self.widget_CycleEditor, "Number of Coats: ", [640, 110, 191, 31], font)
 
         self.Coating_Step_List = QtWidgets.QFrame(self.widget_CycleEditor)
         self.Coating_Step_List.setGeometry(QtCore.QRect(0, 0, 630, 500))
@@ -120,26 +97,23 @@ class Ui_MainWindow(object):
         self.Coating_Step_List.setObjectName("Coating_Step_List")
         self.Coating_Step_List_Layout = QVBoxLayout(self.Coating_Step_List)
 
-        self.button_Home_CycleEditor = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_Home_CycleEditor.setGeometry(QtCore.QRect(640, 460, 150, 40))
-        self.button_Home_CycleEditor.setText("Return Home") # TODO: Make into a SAVE AND RETURN
-        self.button_Home_CycleEditor.clicked.connect(self.clickedHome)
+        self.selectCycle = QtWidgets.QComboBox(self.widget_CycleEditor)
+        self.selectCycle.setGeometry(QtCore.QRect(810, 340, 150, 40))
+        self.selectCycle.setObjectName("selectCycle")
+        self.selectCycle.addItems(self.active_cycle.coat_cycle_list)
 
-        self.button_SaveCycleEditor = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_SaveCycleEditor.setGeometry(QtCore.QRect(810, 460, 150, 40))
-        self.button_SaveCycleEditor.setText("Save")
-        self.button_SaveCycleEditor.clicked.connect(self.clickedSaveCycleEditor)
-
-        self.button_StartCycle = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_StartCycle.setGeometry(QtCore.QRect(640, 400, 320, 50))
-        self.button_StartCycle.setText("Start Cycle")
-        self.button_StartCycle.clicked.connect(self.clickedStartCycle)
-
-        self.button_LoadCycle = QtWidgets.QPushButton(self.widget_CycleEditor)
-        self.button_LoadCycle.setGeometry(QtCore.QRect(640, 340, 320, 50))
-        self.button_LoadCycle.setText("Load Saved Cycle")
-        self.button_LoadCycle.clicked.connect(self.clickedLoadCycle)
-
+        self.button_Home_CycleEditor = self.createButton(self.widget_CycleEditor, "Return Home", 
+                                                         [640, 460, 150, 40], self.clickedHome)
+        self.button_SaveCycleEditor = self.createButton(self.widget_CycleEditor, "Save", 
+                                                        [810, 460, 150, 40], self.clickedSaveCycleEditor)
+        self.button_StartCycle = self.createButton(self.widget_CycleEditor, "Start Cycle", 
+                                                   [640, 400, 320, 50], self.clickedStartCycle)
+        self.button_LoadCycle = self.createButton(self.widget_CycleEditor, "Load Cycle",
+                                                  [640, 340, 150, 40], self.clickedLoadCycle)
+        self.label_SaveFileName = self.createLabel(self.widget_CycleEditor, "Save File Name: ", 
+                                                   [640, 520, 130, 40], font)
+        self.lineEdit_SaveFileName = QtWidgets.QLineEdit(self.widget_CycleEditor)
+        self.lineEdit_SaveFileName.setGeometry(QtCore.QRect(770, 520, 190, 30))
         self.stackedWidget.addWidget(self.widget_CycleEditor)
 
     def setupMainMenu(self):
@@ -154,89 +128,68 @@ class Ui_MainWindow(object):
         self.label_Title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.label_Title.setFont(font)
 
-        self.button_Start = QtWidgets.QPushButton(self.widget_MainMenu)
-        self.button_Start.setGeometry(QtCore.QRect(412, 300, 200, 40))
-        self.button_Start.setObjectName("button_Start")
-        self.button_Start.setText("Start")
-        self.button_Start.clicked.connect(self.clickedStart)
-
-        self.button_Settings = QtWidgets.QPushButton(self.widget_MainMenu)
-        self.button_Settings.setGeometry(QtCore.QRect(412, 400, 200, 40))
-        self.button_Settings.setObjectName("button_Settings")
-        self.button_Settings.setText("Settings")
-        self.button_Settings.clicked.connect(self.clickedSettings)
+        self.button_Start = self.createButton(self.widget_MainMenu, "Start", [412, 300, 200, 40], self.clickedStart)
+        self.button_Settings = self.createButton(self.widget_MainMenu, "Settings", [412, 400, 200, 40], self.clickedSettings)
 
         self.stackedWidget.addWidget(self.widget_MainMenu)
-        
+    
     def setupSettings(self):
         font = QtGui.QFont()
+        font.setPointSize(20)
         self.widget_Settings = QWidget()
         self.widget_Settings.setObjectName("widget_Settings")
 
-        self.label_Settings = QLabel(self.widget_Settings)
-        self.label_Settings.setGeometry(QtCore.QRect(412, 20, 200, 40))
-        self.label_Settings.setText("Settings")
-        self.label_Settings.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        font.setPointSize(20)
-        self.label_Settings.setFont(font)
-        
-        self.label_Reservoir1 = QLabel(self.widget_Settings)
-        self.label_Reservoir1.setGeometry(QtCore.QRect(50, 150, 200, 30))
-        self.label_Reservoir1.setText("Name of Reservoir 1:")
+        self.label_Settings = self.createLabel(self.widget_Settings, "Settings", [412, 20, 200, 40], 
+                                               font, Qt.AlignmentFlag.AlignHCenter)
+        font.setPointSize(11)
+
+        self.label_Reservoir1 = self.createLabel(self.widget_Settings, "Name of Reservoir 1:", [50, 150, 200, 30], font)
         self.lineEdit_Reservoir1 = QtWidgets.QLineEdit(self.widget_Settings)
         self.lineEdit_Reservoir1.setGeometry(QtCore.QRect(250, 150, 250, 30))
 
-        self.label_Reservoir2 = QLabel(self.widget_Settings)
-        self.label_Reservoir2.setGeometry(QtCore.QRect(50, 190, 200, 30))
-        self.label_Reservoir2.setText("Name of Reservoir 2:")
+        self.label_Reservoir2 = self.createLabel(self.widget_Settings, "Name of Reservoir 2:", [50, 190, 200, 30], font)
         self.lineEdit_Reservoir2 = QtWidgets.QLineEdit(self.widget_Settings)
         self.lineEdit_Reservoir2.setGeometry(QtCore.QRect(250, 190, 250, 30))
 
-        self.label_Reservoir3 = QLabel(self.widget_Settings)
-        self.label_Reservoir3.setGeometry(QtCore.QRect(50, 230, 200, 30))
-        self.label_Reservoir3.setText("Name of Reservoir 3:")
+        self.label_Reservoir3 = self.createLabel(self.widget_Settings, "Name of Reservoir 3:", [50, 230, 200, 30], font)
         self.lineEdit_Reservoir3 = QtWidgets.QLineEdit(self.widget_Settings)
         self.lineEdit_Reservoir3.setGeometry(QtCore.QRect(250, 230, 250, 30))
 
-        self.label_Reservoir4 = QLabel(self.widget_Settings)
-        self.label_Reservoir4.setGeometry(QtCore.QRect(50, 270, 200, 30))
-        self.label_Reservoir4.setText("Name of Reservoir 4:")
+        self.label_Reservoir4 = self.createLabel(self.widget_Settings, "Name of Reservoir 4:", [50, 270, 200, 30], font)
         self.lineEdit_Reservoir4 = QtWidgets.QLineEdit(self.widget_Settings)
         self.lineEdit_Reservoir4.setGeometry(QtCore.QRect(250, 270, 250, 30))
 
-        self.button_Home_Settings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_Home_Settings.setGeometry(QtCore.QRect(640, 450, 150, 40))
-        self.button_Home_Settings.setText("Return Home") # TODO: Make into a SAVE AND RETURN
-        self.button_Home_Settings.clicked.connect(self.clickedHome)
+        self.button_Home_Settings = self.createButton(self.widget_Settings, "Return Home", [640, 450, 150, 40], self.clickedHome)
+        self.button_SaveSettings = self.createButton(self.widget_Settings, "Save", [810, 450, 150, 40], self.clickedSaveSettings)
+        self.button_LoadSettings = self.createButton(self.widget_Settings, "Load", [810, 400, 150, 40], self.clickedLoadSettings)
 
-        self.button_SaveSettings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_SaveSettings.setGeometry(QtCore.QRect(810, 450, 150, 40))
-        self.button_SaveSettings.setText("Save")
-        self.button_SaveSettings.clicked.connect(self.clickedSaveSettings)
-
-        self.button_LoadSettings = QtWidgets.QPushButton(self.widget_Settings)
-        self.button_LoadSettings.setGeometry(QtCore.QRect(810, 400, 150, 40))
-        self.button_LoadSettings.setText("Load")
-        self.button_LoadSettings.clicked.connect(self.clickedLoadSettings)
+        self.clickedLoadSettings() # Loads the reservoir names
 
         self.stackedWidget.addWidget(self.widget_Settings)
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "PRISM LbL"))
-        self.button_addStep.setText(_translate("MainWindow", "Add Step"))
-        self.selectCoating.setItemText(0, _translate("MainWindow", "Reservoir 1"))
-        self.selectCoating.setItemText(1, _translate("MainWindow", "Reservoir 2"))
-        self.selectCoating.setItemText(2, _translate("MainWindow", "Reservoir 3"))
-        self.selectCoating.setItemText(3, _translate("MainWindow", "Reservoir 4"))
-        self.label_selectCoating.setText(_translate("MainWindow", "Coating Solution:"))
-        self.label_numberOfCoats.setText(_translate("MainWindow", "Number of Coats:"))
+    def createButton(self, widget: QWidget, text: str, geometry: list[int], connected_method):
+        object = QtWidgets.QPushButton(widget)
+        object.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
+        object.setText(text)
+        object.setObjectName("button_" + text)
+        object.clicked.connect(connected_method)
+        return object
+    
+    def createLabel(self, widget: QWidget, text:str, geometry:list[int], font, alignment=Qt.AlignmentFlag.AlignLeft):
+        object = QLabel(widget)
+        object.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
+        object.setText(text)
+        object.setObjectName("label_" + text)
+        object.setAlignment(alignment)
+        object.setFont(font)
+        return object
     
     def loadStepWidget(self, coat_count, reservoir_index):
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
+        font = QtGui.QFont()
 
         self.unit_step.setProperty("reservoir_index", reservoir_index)
         self.unit_step.setProperty("coat_count", coat_count)
@@ -244,23 +197,14 @@ class Ui_MainWindow(object):
         self.selectCoating.setCurrentIndex(reservoir_index)
         coating_solution = self.selectCoating.currentText()
 
-        self.label_Solution = QLabel(self.unit_step)
-        self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
+        self.label_Solution = self.createLabel(self.unit_step, f"Res {reservoir_index} - {coating_solution}", 
+                                               [18, 9, 191, 31], font)
         self.label_Solution.setAutoFillBackground(True)
-        self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
 
-        self.label_Coats = QtWidgets.QLabel(self.unit_step)
-        self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
+        self.label_Coats = self.createLabel(self.unit_step, f"Coats: {coat_count}", [238, 10, 121, 31], font)
         self.label_Coats.setAutoFillBackground(True)
-        self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(coat_count))
 
-        self.button_delete = QtWidgets.QPushButton(self.unit_step)
-        self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
-        self.button_delete.setObjectName("button_delete")
-        self.button_delete.setText("Delete")
-        self.button_delete.clicked.connect(self.unit_step.deleteLater)
+        self.button_delete = self.createButton(self.unit_step, "Delete", [510, 13, 75, 31], self.unit_step.deleteLater)
 
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
 
@@ -272,32 +216,21 @@ class Ui_MainWindow(object):
             return
         coating_solution = self.selectCoating.currentText()
         reservoir_index = self.selectCoating.currentIndex()
-
+        font = QtGui.QFont()
+        # initializing coating step widget and assigning information unique to it
         self.unit_step = QWidget()
         self.unit_step.setGeometry(QtCore.QRect(10, 10, 611, 51))
         self.unit_step.setObjectName("unit_step")
         self.unit_step.setStyleSheet("background-color: #E5A1DA")
         self.unit_step.setProperty("reservoir_index", reservoir_index)
         self.unit_step.setProperty("coat_count", coat_count)
-
-        self.label_Solution = QLabel(self.unit_step)
-        self.label_Solution.setGeometry(QtCore.QRect(18, 9, 191, 31))
+        # adding display information to the widget
+        self.label_Solution = self.createLabel(self.unit_step, f"Res {reservoir_index} - {coating_solution}", 
+                                               [18, 9, 191, 31], font)
         self.label_Solution.setAutoFillBackground(True)
-        self.label_Solution.setObjectName("label_Solution")
-        self.label_Solution.setText("Res {} - ".format(reservoir_index) + coating_solution)
-
-        self.label_Coats = QtWidgets.QLabel(self.unit_step)
-        self.label_Coats.setGeometry(QtCore.QRect(238, 10, 121, 31))
+        self.label_Coats = self.createLabel(self.unit_step, f"Coats: {coat_count}", [238, 10, 121, 31], font)
         self.label_Coats.setAutoFillBackground(True)
-        self.label_Coats.setObjectName("label_Coats")
-        self.label_Coats.setText("Coats: {}".format(coat_count))
-
-        self.button_delete = QtWidgets.QPushButton(self.unit_step)
-        self.button_delete.setGeometry(QtCore.QRect(510, 13, 75, 31))
-        self.button_delete.setObjectName("button_delete")
-        self.button_delete.setText("Delete")
-        self.button_delete.clicked.connect(self.unit_step.deleteLater)
-
+        self.button_delete = self.createButton(self.unit_step, "Delete", [510, 13, 75, 31], font, self.unit_step.deleteLater)
 
         self.Coating_Step_List_Layout.addWidget(self.unit_step)
     
@@ -307,23 +240,37 @@ class Ui_MainWindow(object):
         except ValueError:
             print("Incorrect value in number of cycles")
             return 0
+        nozzle_path = self.selectPathing.currentText()
         step_count = self.Coating_Step_List_Layout.count()
-        arr_coat_count = [0] * step_count
-        arr_reservoir = [0] * step_count
-        for step in range(step_count):
-            active_step = self.Coating_Step_List_Layout.itemAt(step).widget()
-            coating_count = active_step.property("coat_count")
-            arr_coat_count[step] = coating_count
+        arr_coat_count = [0] * step_count # initializes coat count array with correct size
+        arr_reservoir = [0] * step_count # initializes reservoir array with correct size
+        for step in range(step_count): # grabs data from each coating step widget
+            active_step = self.Coating_Step_List_Layout.itemAt(step).widget() # pulls up the coating step widget for this step
+            coating_count = active_step.property("coat_count") # gets the coat count for this step
+            arr_coat_count[step] = coating_count # puts data in array for consolidation
 
-            reservoir_index = active_step.property("reservoir_index")
-            arr_reservoir[step] = reservoir_index
+            reservoir_index = active_step.property("reservoir_index") # gets the reservoir for this step
+            arr_reservoir[step] = reservoir_index # puts data in array for consolidation
 
             print("Step #{0} : Coat count = {1} : Reservoir index = {2}".format(step, coating_count, reservoir_index))
-        
-        self.step_count = step_count
-        self.cycle_count = cycle_count
-        self.arr_coat_count = arr_coat_count
-        self.arr_reservoir = arr_reservoir
+
+        self.createCoatVector(step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path)
+
+    def createCoatVector(self, step_count, cycle_count, arr_coat_count, arr_reservoir, nozzle_path):
+        self.coat_vector = [arr_reservoir, arr_coat_count, [step_count, cycle_count], [nozzle_path]]
+        self.loadCoatVector()
+
+    def loadCoatVector(self):
+        self.step_count = self.coat_vector[2][0]
+        self.cycle_count = self.coat_vector[2][1]
+        self.arr_reservoir = self.coat_vector[0]
+        self.arr_coat_count = self.coat_vector[1]
+        self.nozzle_path = self.coat_vector[3][0]
+
+    def updateCycleEditor(self):
+        self.gatherCycleSettings()
+        self.active_cycle.coat_vector = self.coat_vector
+        self.active_cycle.loadCoatVector()
 
     def clickedHome(self):
         self.stackedWidget.setCurrentIndex(0)
@@ -354,6 +301,7 @@ class Ui_MainWindow(object):
             writer = csv.writer(file)
             writer.writerow(save_vector)
             print("Settings data saved to SavedSettings.csv")
+    
     def clickedLoadSettings(self):
         str_line = []
         with open("SavedSettings.csv", "r") as file:
@@ -375,39 +323,30 @@ class Ui_MainWindow(object):
         self.selectCoating.setItemText(1, text_res2)
         self.selectCoating.setItemText(2, text_res3)
         self.selectCoating.setItemText(3, text_res4)
-        
     
     def clickedSaveCycleEditor(self):
-        self.gatherCycleSettings()
-        self.active_cycle.loadCycleSettings(self.cycle_count, self.step_count, self.arr_reservoir, self.arr_coat_count)
-        self.active_cycle.generateSaveFile()
+        self.updateCycleEditor()
+        self.active_cycle.loadCoatVector()
+        savefilename = self.lineEdit_SaveFileName.text()
+        self.active_cycle.generateSaveFile(savefilename)
+        self.selectCycle.addItem(f"{savefilename}")
 
     def clickedStartCycle(self):
         print("Beginning coating cycle...\n")
-        self.gatherCycleSettings()
-        self.active_cycle.loadCycleSettings(self.cycle_count,
-                                            self.step_count,
-                                            self.arr_reservoir,
-                                            self.arr_coat_count)
-        print("Cycle executor not yet implemented, print dummy will be used instead\n")
+        self.updateCycleEditor()
+        self.active_cycle.loadCoatVector()
         self.active_cycle.executeCycle()
 
     def clickedLoadCycle(self):
-        self.active_cycle.loadSaveFile()
-        self.step_count = self.active_cycle.step_count
-        self.cycle_count = self.active_cycle.cycle_count
-        self.arr_reservoir = self.active_cycle.arr_reservoir
-        self.arr_coat_count = self.active_cycle.arr_coat_count
-
+        filename = self.selectCycle.currentText()
+        self.active_cycle.loadSaveFile(filename)
+        self.coat_vector = self.active_cycle.coat_vector
+        self.loadCoatVector()
         for step in range(self.step_count):
             self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
         self.lineEdit_numberOfCycles.setText(str(self.cycle_count))
+        self.selectPathing.setCurrentText(self.nozzle_path)
         
-    
-
-
-
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

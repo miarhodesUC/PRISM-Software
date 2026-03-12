@@ -7,7 +7,7 @@ from pigpio_shell import pigpio_shell as shell
 import csv
 import time
 from numpy import heaviside as u
-from HardwareControls import HAL, Solenoid, SCodeParse
+from Firmware import HAL, Solenoid, SCodeParse
 
 def generateTestFile(file_name, save_vector):
     with open(file_name, "w", newline="") as file:
@@ -17,6 +17,7 @@ def generateTestFile(file_name, save_vector):
             print(f"Data saved to {file_name}")
 
 def main():
+    '''
     generateTestFile("testfile.csv",[
          ['HOME', 'X'],
          ['HOME', 'Y'],
@@ -34,6 +35,11 @@ def main():
          [1, 1, 1, 1],
          [4, 2]
     ])
-    test_session = SCodeParse("testfile.csv", "spraytest.csv", Solenoid(HAL(pigpio.pi())))
+    '''
+    test_session = SCodeParse(Solenoid(HAL(pigpio.pi())))
+    test_session.commandPUMP('On')
+    test_session.commandMOVE('X40')
+    test_session.commandMOVE('Y30')
+    test_session.commandPUMP('Off')
 if __name__ == "__main__":
     main()

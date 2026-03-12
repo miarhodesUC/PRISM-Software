@@ -1,5 +1,5 @@
 # test file
-from HardwareControls import SCodeParse, MotorSolenoid
+from Firmware import SCodeParse, MotorSolenoid
 from HAL_shell import HAL_shell
 import pigpio
 import csv
