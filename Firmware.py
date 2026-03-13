@@ -145,6 +145,30 @@ class Solenoid():
 
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
+    def demoMotor(self, steps, frequency_index, axis:str): # tooling to control motor movements by axis
+        match axis:
+            case 'X':
+                print("Moving X")
+                step_pin = self.LOCOMOTIVE_STEP_PIN_X
+                direction_pin = self.DIRECTION_PIN_X
+                limit_pin = self.X_SWITCH_PIN
+            case 'Y':
+                print("Moving Y")
+                step_pin = self.LOCOMOTIVE_STEP_PIN_Y
+                direction_pin = self.DIRECTION_PIN_Y
+                limit_pin = self.Y_SWITCH_PIN
+            case 'T':
+                direction_pin = self.LOCOMOTIVE_DIRECTION_PIN
+                step_pin = self.LOCOMOTIVE_STEP_PIN_T
+            case _:
+                raise ValueError("Error in moveMotor: {} is an invalid axis".format(axis))
+        time_value_s = abs(steps) / (self.STEP_MODE_VALUE * 
+                                              self.PWM_FREQUENCY_LIST[frequency_index] * self.DISTANCE_PER_STEP)
+        self.hal.moveStepperMotor(step_pin, direction_pin, 
+                                  u(-steps, 0), self.DUTY_CYCLE_HALF, frequency_index)
+        time.sleep(time_value_s) # there's probably a better way to do this -> update: there's actually a worse way :3 ^
+        self.hal.stopStepperMotor(step_pin, direction_pin)
+        
     def moveMotor(self, distance_value, axis:str): # tooling to control motor movements by axis
         match axis:
             case 'X':
