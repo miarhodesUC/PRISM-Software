@@ -23,8 +23,8 @@ class CoatCycle():
         self.current_reservoir = 0
 
         self.basepath = os.getcwd()
-        self.nozzle_path_list = os.listdir(self.basepath + '\\nozzle_paths')
-        self.coat_cycle_list = os.listdir(self.basepath + "\\saved_cycles")
+        self.nozzle_path_list = os.listdir(self.basepath + '/nozzle_paths')
+        self.coat_cycle_list = os.listdir(self.basepath + "/saved_cycles")
 
     def addStep(self, reservoir, coat):
         self.arr_reservoir.append(reservoir)
@@ -34,7 +34,7 @@ class CoatCycle():
     def generateSaveFile(self, filename): #TODO make this a JSON file
         coat_vector = self.coat_vector
         print(f"Coat vector: {coat_vector}")
-        filepath = self.basepath + f"\\saved_cycles\\{filename}.csv"
+        filepath = self.basepath + f"/saved_cycles/{filename}.csv"
         with open(filepath, "w", newline="") as file:
             writer = csv.writer(file)
             for row in coat_vector:
@@ -44,7 +44,7 @@ class CoatCycle():
     
     def loadSaveFile(self, filename):
         self.coat_vector = [] # clearing coat vector so steps don't get re-added
-        filepath = self.basepath + "\\saved_cycles\\" + filename
+        filepath = self.basepath + "/saved_cycles/" + filename
         with open(filepath, "r") as file:
             content = csv.reader(file)
             for line in content:
@@ -68,7 +68,7 @@ class CoatCycle():
 
     def executeCycle(self):
         if self.demoMode: #demo mode is for program testing purposes, much easier to read console logs than watch hardware
-            pathfile = self.basepath + "\\nozzle_paths\\" + self.nozzle_path
+            pathfile = self.basepath + "/nozzle_paths/" + self.nozzle_path
             command_vector = []
             with open(pathfile, "r") as file:
                 content = csv.reader(file)

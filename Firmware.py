@@ -263,7 +263,7 @@ class SCodeParse():
 
     def splitPathFile(self):
         basepath = os.getcwd()
-        pathfile = basepath + "\\nozzle_paths\\" + self.nozzle_path
+        pathfile = basepath + "/nozzle_paths/" + self.nozzle_path
         with open(pathfile, "r") as file:
             content = csv.reader(file)
             for line in content:
