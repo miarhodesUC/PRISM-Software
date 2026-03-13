@@ -6,6 +6,7 @@ import csv
 import time
 from numpy import heaviside as u
 from enum import Enum
+import os
 
 # To any future programmers looking at this, my deepest apologies
 
@@ -239,9 +240,9 @@ class SCodeParse():
         self.motor_solenoid = Solenoid
         self.command_vector = []
 
-    def startSequence(self, pathfile, coat_vector):
+    def startSequence(self, coat_vector):
         self.loadCoatCycle(coat_vector)
-        self.splitPathFile(pathfile)
+        self.splitPathFile()
         self.executeCoatCycle()
     
     def executeCoatCycle(self):
@@ -258,9 +259,11 @@ class SCodeParse():
         self.cycle_count = coat_vector[2][1]
         self.arr_reservoir = coat_vector[0]
         self.arr_coat_count = coat_vector[1]
-        self.nozzle_path = coat_vector[3]
+        self.nozzle_path = coat_vector[3][0]
 
-    def splitPathFile(self, pathfile):
+    def splitPathFile(self):
+        basepath = os.getcwd()
+        pathfile = basepath + "\\nozzle_paths\\" + self.nozzle_path
         with open(pathfile, "r") as file:
             content = csv.reader(file)
             for line in content:

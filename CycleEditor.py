@@ -67,8 +67,8 @@ class CoatCycle():
         self.nozzle_path = self.coat_vector[3][0]
 
     def executeCycle(self):
-        pathfile = self.basepath + "\\nozzle_paths\\" + self.nozzle_path
-        if self.demoMode:
+        if self.demoMode: #demo mode is for program testing purposes, much easier to read console logs than watch hardware
+            pathfile = self.basepath + "\\nozzle_paths\\" + self.nozzle_path
             command_vector = []
             with open(pathfile, "r") as file:
                 content = csv.reader(file)
@@ -86,7 +86,7 @@ class CoatCycle():
                     self.incrementStep()
                 self.incrementCycle()
         else:
-            self.firmware.startSequence(pathfile, self.coat_vector)
+            self.firmware.startSequence(self.coat_vector)
     
     def changeCycleCount(self, cycle_count):
         self.cycle_count = cycle_count

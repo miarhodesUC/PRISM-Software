@@ -37,7 +37,7 @@ def main():
     ])
     '''
     test = SCodeParse()
-    test.startSequence("test1.csv", [[0,1], [1,1], [2,1]])
+    test.startSequence([[0,1], [1,1], [2,1], ["test1.csv"]])
     #motor = Solenoid()
     #motor.moveMotor(1200, 'X')
 if __name__ == "__main__":
