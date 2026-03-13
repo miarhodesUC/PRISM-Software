@@ -104,7 +104,7 @@ class Solenoid():
 
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
-    STEP_MODE_VALUE = 1
+    STEP_MODE_VALUE = 0.5 #value accounts for microsteps
     DISTANCE_PER_STEP = 1
     VOLUME_PER_STEP = 1
 
