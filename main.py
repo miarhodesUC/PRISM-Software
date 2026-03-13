@@ -48,6 +48,8 @@ def main():
             test.demoMotor(1000, f, dir, 'Y')
             measure = input("Enter measured distance in mm: ")
             data[f-11][s] = float(measure)
+            print("Current data: ")
+            print(data)
     averaged_data = np.mean(data, axis=1)
     for f in range(11, 18):
         freq = test.PWM_FREQUENCY_LIST[f]
