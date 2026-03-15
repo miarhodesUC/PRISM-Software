@@ -36,6 +36,19 @@ def main():
          [4, 2]
     ])
     '''
+
+    '''
+    log:
+    Average distance per 1k steps for 500Hz is 20.116666666666667mm
+Average distance per 1k steps for 800Hz is 20.683333333333334mm
+Average distance per 1k steps for 1000Hz is 20.250000000000004mm
+Average distance per 1k steps for 1600Hz is 0.5mm
+Average distance per 1k steps for 2000Hz is 0.0mm
+Average distance per 1k steps for 4000Hz is 0.0mm
+Average distance per 1k steps for 8000Hz is 0.0mm
+avg distance: 20.4mm / 1000 steps
+
+    '''
     data = np.zeros((7, 6))
     test = Solenoid()
     for f in range(11, 18):

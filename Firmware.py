@@ -105,7 +105,7 @@ class Solenoid():
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 0.5 #value accounts for microsteps
-    DISTANCE_PER_STEP = 1
+    DISTANCE_PER_STEP = 0.0204
     VOLUME_PER_STEP = 1
 
     # PIN CONFIGS
