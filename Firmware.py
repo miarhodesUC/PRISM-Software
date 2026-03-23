@@ -1,11 +1,9 @@
-# import pigpio
-import serial
+
 from pigpio_shell import pigpio_shell as shell
 import pigpio 
 import csv
 import time
 from numpy import heaviside as u
-from enum import Enum
 import os
 
 # To any future programmers looking at this, my deepest apologies
@@ -105,7 +103,7 @@ class Solenoid():
     # CONSTANT CONFIGS (Replace when values have been found)
     TIME_CONSTANT = 1
     STEP_MODE_VALUE = 0.5 #value accounts for microsteps
-    DISTANCE_PER_STEP = 0.0204
+    DISTANCE_PER_STEP = 1 #0.0204
     VOLUME_PER_STEP = 1
 
     # PIN CONFIGS

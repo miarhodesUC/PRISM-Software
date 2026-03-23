@@ -49,11 +49,11 @@ Average distance per 1k steps for 8000Hz is 0.0mm
 avg distance: 20.4mm / 1000 steps
 
     '''
-    data = np.zeros((7, 6))
+    data = np.zeros((3, 30))
     test = Solenoid()
-    for f in range(11, 18):
-        print(f"Now testing frequency {test.PWM_FREQUENCY_LIST[11]}")
-        for s in range(6):
+    for f in range(11, 14):
+        print(f"Now testing frequency {test.PWM_FREQUENCY_LIST[f]}")
+        for s in range(30):
             ready = input("Please enter 'y' when ready to start: ")
             if ready == 'y':
                 pass
@@ -64,11 +64,12 @@ avg distance: 20.4mm / 1000 steps
             print("Current data: ")
             print(data)
     averaged_data = np.mean(data, axis=1)
+    stdev_data = np.std(data, axis=1)
     for f in range(11, 18):
         freq = test.PWM_FREQUENCY_LIST[f]
         mean = averaged_data[f-11]
-        print(f"Average distance per 1k steps for {freq}Hz is {mean}mm")
-    #motor = Solenoid()
-    #motor.moveMotor(1200, 'X')
+        stdev = stdev_data[f-11]
+        RSD = stdev / mean
+        print(f"Distance per 1k steps for {freq}Hz: Mean = {mean}mm | Std = {stdev}mm | RSD = {RSD}mm")
 if __name__ == "__main__":
     main()
