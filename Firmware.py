@@ -256,6 +256,8 @@ class SCodeParse():
     # Fluid handling configs
     PURGE_TIME = 10 #dummy value
     LOAD_TIME = 10 #dummy value
+    X_LENGTH = 240
+    Y_LENGTH = 10
     def __init__(self, Solenoid = Solenoid()):
         self.motor_solenoid = Solenoid
         self.command_vector = []
@@ -298,6 +300,38 @@ class SCodeParse():
             mneumonic = self.command_vector[line_number][0]
             state = self.command_vector[line_number][1]
             self.mneumonicMatch(mneumonic, state)
+
+    def checkPathDisplacement(self):
+        print("Executing path displacement check")
+        x_displacement = 0
+        y_displacement = 0
+        for line_number in range(len(self.command_vector)):
+            mneumonic = self.command_vector[line_number][0]
+            state = self.command_vector[line_number][1]
+            if mneumonic == 'MOVE':
+                try:
+                    axis = str(state[0])
+                except:
+                    raise TypeError(f"Axis value {state[0]} could not be retyped as a string")
+                try: 
+                    distance_value = int(state[1:])
+                except:
+                    raise TypeError("Distance value '{}' could not be retyped as an integer".format(state[1:]))
+                match axis:
+                    case 'X':
+                        x_displacement = x_displacement + distance_value
+                    case 'Y':
+                        y_displacement = y_displacement + distance_value
+                    case _:
+                        pass
+        if x_displacement >= self.X_LENGTH:
+            raise ValueError("Baseplate will go out of range, check your path code")
+        if y_displacement >= self.Y_LENGTH:
+            raise ValueError("Nozzle carriage will go out of range, check your path code")
+            
+        
+
+
     
     def purgeSequence(self):
         self.motor_solenoid.setReservoirSelect(0) #MAGIC NUMBER ALERT, please fix later

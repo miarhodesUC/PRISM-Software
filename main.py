@@ -38,6 +38,6 @@ def main():
         print(f"Distance per 1k steps for {freq}Hz: Mean = {mean}mm | Std = {stdev}mm | RSD = {RSD}mm")
     '''
     test = Solenoid()
-    test.homeMotor('Y')
+    test.homeMotor('X')
 if __name__ == "__main__":
     main()
