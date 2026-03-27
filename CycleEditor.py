@@ -1,7 +1,5 @@
-import numpy
 import csv
 import os
-import pigpio
 import Firmware as firmware
 from pigpio_shell import pigpio_shell as shell
 

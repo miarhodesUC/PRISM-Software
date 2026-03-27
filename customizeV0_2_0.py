@@ -20,11 +20,8 @@ Dark: 250 75 50
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt
-import CycleEditor
 from CycleEditor import CoatCycle
 import csv
-import os
-import Firmware as firmware
 from pigpio_shell import pigpio_shell as shell
 # WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)

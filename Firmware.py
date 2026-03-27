@@ -1,4 +1,3 @@
-
 from pigpio_shell import pigpio_shell as shell
 import pigpio 
 import csv
@@ -7,7 +6,6 @@ from numpy import heaviside as u
 import os
 
 # To any future programmers looking at this, my deepest apologies
-
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
@@ -92,19 +90,14 @@ class Solenoid():
 
     # Duty cycle
     DUTY_CYCLE_HALF = 128
-    DUTY_CYCLE_QUARTER = 64
-    DUTY_CYCLE_OFF = 0
-
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 
                           320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
     PWM_FREQUENCY_INDEX = 11
     VALVE_FREQUENCY_INDEX = 11
 
-    # CONSTANT CONFIGS (Replace when values have been found)
-    TIME_CONSTANT = 1
+    # CONSTANT CONFIGS
     STEP_MODE_VALUE = 0.5 #value accounts for microsteps
-    DISTANCE_PER_STEP = 1 #0.0204
-    VOLUME_PER_STEP = 1
+    DISTANCE_PER_STEP = 0.02
 
     # PIN CONFIGS
     #TODO Have these configs saved in a JSON file or a txt file
@@ -130,7 +123,6 @@ class Solenoid():
     RESERVOIR_SELECT_HIGHBIT = 21
     RESERVOIR_SELECT_LOWBIT = 16
     AIR_VALVE_PIN = 26
-    
 
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
@@ -218,22 +210,6 @@ class Solenoid():
                 # step_pin = self.LOCOMOTIVE_STEP_PIN_T
                 # switch_pin = self.T_SWITCH_PIN
                 print("Homing T not yet implemented")
-                ''' # Removing case ALL, not needed
-            case 'ALL':
-                print("Homing all motors")
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
-                                  self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                if self.hal.pi.wait_for_edge(self.LOCOMOTIVE_STEP_PIN_X, self.FALLING_EDGE):
-                    print("Limit switch event detected")
-                else:
-                    raise TimeoutError("Homing not complete")
-                self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.LOCOMOTIVE_DIRECTION_PIN, 
-                                  self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                if self.hal.pi.wait_for_edge(self.LOCOMOTIVE_STEP_PIN_Y, self.FALLING_EDGE):
-                    print("Limit switch event detected")
-                else:
-                    raise TimeoutError("Homing not complete")
-                '''
             case _:    
                 raise ValueError("Error in homeMotor: {} is an invalid axis".format(axis))
     def pumpOn(self):
@@ -257,7 +233,7 @@ class Solenoid():
 class SCodeParse():
     # Fluid handling configs
     PURGE_TIME = 10 #dummy value
-    FLUID_LATENCY = 10 #dummy value
+    LOAD_TIME = 10 #dummy value
     def __init__(self, Solenoid = Solenoid()):
         self.motor_solenoid = Solenoid
         self.command_vector = []
@@ -300,6 +276,21 @@ class SCodeParse():
             mneumonic = self.command_vector[line_number][0]
             state = self.command_vector[line_number][1]
             self.mneumonicMatch(mneumonic, state)
+    
+    def purgeSequence(self):
+        self.motor_solenoid.setReservoirSelect(0) #MAGIC NUMBER ALERT, please fix later
+        self.commandPUMP('On')
+        self.commandSPRAY('On')
+        time.sleep(self.PURGE_TIME)
+        self.commandPUMP('Off')
+        self.commandSPRAY('Off')
+
+    def loadSequence(self):
+        self.commandPUMP('On')
+        self.commandSPRAY('On')
+        time.sleep(self.LOAD_TIME)
+        self.commandPUMP('Off')
+        self.commandSPRAY('Off')
 
     def mneumonicMatch(self, mneumonic, state):
         print("Performing mneumonic match")
@@ -379,42 +370,6 @@ class SCodeParse():
                 duty_cycle = int(state)
                 self.motor_solenoid.pwmAirValve(duty_cycle)
                 print(f"Modulating air compressor at {duty_cycle/255}")
-'''
-class I2C():
-    I2C_BUS = 1
-    def __init__(self, i2c_address):
-        self.pi = pigpio.pi()
-        self.handle = self.pi.i2c_open(self.I2C_BUS, i2c_address)
-        # self.transmit_buffer = []
-        # self.receive_buffer = []
-    
-    def i2cTransmit(self, tx_data):
-        error = self.pi.i2c_write_device(self.handle, tx_data)
-        print("Transmitting data: {}\n".format(tx_data))
-        if error == 0:
-            print("SUCCESS")
-        else:
-            print("FAILED error code: {}".format(error))
-        return error
-    
-    def i2cReceive(self, byte_count):
-        rx_data = self.pi.i2c_read_device(self.handle, byte_count)
-        return rx_data
-    
-    def i2cPing(self):
-        ping = [] # if this breaks, add a 0 or something
-        return self.i2cTransmit(ping)
-    
-    def i2cReadRegister(self, register_address, byte_count):
-        print("Reading register: {}".format(register_address))
-        self.i2cTransmit(register_address)
-        rx_data = self.i2cReceive(byte_count)
-        return rx_data
-    
-    def i2cWriteRegister(self, register_address, tx_data):
-        print("Writing to register: {}".format(register_address))
-        self.i2cTransmit(register_address)
-        self.i2cTransmit(tx_data)
-'''
+
 
 
