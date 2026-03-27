@@ -256,8 +256,8 @@ class SCodeParse():
     # Fluid handling configs
     PURGE_TIME = 10 #dummy value
     LOAD_TIME = 10 #dummy value
-    X_LENGTH = 240
-    Y_LENGTH = 10
+    X_LENGTH = 240 # length of nozzle carriage track
+    Y_LENGTH = 80 # length of available movement area for baseplate
     def __init__(self, Solenoid = Solenoid()):
         self.motor_solenoid = Solenoid
         self.command_vector = []
