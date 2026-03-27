@@ -265,6 +265,7 @@ class SCodeParse():
     def startSequence(self, coat_vector):
         self.loadCoatCycle(coat_vector)
         self.splitPathFile()
+        self.checkPathDisplacement()
         self.executeCoatCycle()
     
     def executeCoatCycle(self):
@@ -324,6 +325,8 @@ class SCodeParse():
                         y_displacement = y_displacement + distance_value
                     case _:
                         pass
+        print(f"Total x_axis displacement: {x_displacement}")
+        print(f"Total y_axis displacement: {y_displacement}")
         if x_displacement >= self.X_LENGTH:
             raise ValueError("Baseplate will go out of range, check your path code")
         if y_displacement >= self.Y_LENGTH:
