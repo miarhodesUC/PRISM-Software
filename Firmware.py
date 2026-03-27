@@ -92,8 +92,8 @@ class Solenoid():
     DUTY_CYCLE_HALF = 128
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 
                           320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
-    PWM_FREQUENCY_INDEX = 11
-    VALVE_FREQUENCY_INDEX = 11
+    PWM_FREQUENCY_INDEX = 12
+    VALVE_FREQUENCY_INDEX = 12
 
     # CONSTANT CONFIGS
     STEP_MODE_VALUE = 0.5 #value accounts for microsteps
