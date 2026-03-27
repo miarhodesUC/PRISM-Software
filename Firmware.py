@@ -191,6 +191,7 @@ class Solenoid():
                 if self.hal.pi.read(self.X_SWITCH_PIN) == 0:
                     print("Already homed")
                     self.moveMotor(2, 'X')
+                    return
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
@@ -204,6 +205,7 @@ class Solenoid():
                 if self.hal.pi.read(self.Y_SWITCH_PIN) == 0:
                     print("Already homed")
                     self.moveMotor(2, 'Y')
+                    return
                 print("Homing Y")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
