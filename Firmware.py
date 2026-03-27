@@ -188,7 +188,7 @@ class Solenoid():
     def homeMotor(self, axis:str): # resets motors to origin
         match axis:
             case 'X':
-                if self.hal.checkPin(self.X_SWITCH_PIN) == 0:
+                if self.hal.pi.read(self.X_SWITCH_PIN) == 0:
                     print("Already homed")
                     self.moveMotor(2, 'X')
                 print("Homing X")
@@ -201,7 +201,7 @@ class Solenoid():
                 else:
                     raise TimeoutError("Homing not complete")
             case 'Y':
-                if self.hal.checkPin(self.Y_SWITCH_PIN) == 0:
+                if self.hal.pi.read(self.Y_SWITCH_PIN) == 0:
                     print("Already homed")
                     self.moveMotor(2, 'Y')
                 print("Homing Y")
