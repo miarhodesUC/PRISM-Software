@@ -188,21 +188,29 @@ class Solenoid():
     def homeMotor(self, axis:str): # resets motors to origin
         match axis:
             case 'X':
+                if self.hal.checkPin(self.X_SWITCH_PIN) == 0:
+                    print("Already homed")
+                    self.moveMotor(2, 'X')
                 print("Homing X")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.X_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
+                    self.moveMotor(2, 'X')
                 else:
                     raise TimeoutError("Homing not complete")
             case 'Y':
+                if self.hal.checkPin(self.Y_SWITCH_PIN) == 0:
+                    print("Already homed")
+                    self.moveMotor(2, 'Y')
                 print("Homing Y")
                 self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y, 
                                   self.DIRECTION_NEGATIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
                 if self.hal.pi.wait_for_edge(self.Y_SWITCH_PIN, self.FALLING_EDGE):
                     print("Limit switch event detected")
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
+                    self.moveMotor(2, 'Y')
                 else:
                     raise TimeoutError("Homing not complete")
             case 'T':
