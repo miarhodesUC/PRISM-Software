@@ -192,7 +192,7 @@ class Solenoid():
                     print("Already homed")
                     self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_POSITIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
                     return
                 print("Homing X")
@@ -203,7 +203,7 @@ class Solenoid():
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
                     self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X, 
                                   self.DIRECTION_POSITIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_X, self.DIRECTION_PIN_X)
                 else:
                     raise TimeoutError("Homing not complete")
@@ -212,7 +212,7 @@ class Solenoid():
                     print("Already homed")
                     self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y, 
                                   self.DIRECTION_POSITIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
                     return
                 print("Homing Y")
@@ -223,7 +223,7 @@ class Solenoid():
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
                     self.hal.moveStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y, 
                                   self.DIRECTION_POSITIVE, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self.hal.stopStepperMotor(self.LOCOMOTIVE_STEP_PIN_Y, self.DIRECTION_PIN_Y)
                 else:
                     raise TimeoutError("Homing not complete")
