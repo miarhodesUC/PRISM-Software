@@ -39,6 +39,11 @@ def CarriageSpeedCharacterization():
 def FlowRateCharacterization():
     data = np.zeros(30)
     test = Solenoid()
+    test.pumpOn()
+    print("Loading...")
+    ready = input("Please enter 'y' when done loading")
+    if ready == 'y':
+        pass
     for s in range(30):
         ready = input("Please enter 'y' when ready to start: ")
         if ready == 'y':
@@ -46,10 +51,7 @@ def FlowRateCharacterization():
         test.pumpOn()
         time.sleep(15)
         test.pumpOff
-        measure = input("Enter volume in mL: ")
-        data[s] = float(measure)
-        print("Current data: ")
-        print(data)
+        print(f"Test #{s+1}")
 
 def FirmwareHardwareCQ():
     test = Solenoid()
