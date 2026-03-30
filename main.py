@@ -12,8 +12,7 @@ def generateTestFile(file_name, save_vector):
                 writer.writerow(row)
             print(f"Data saved to {file_name}")
 
-def main():
-    ''' 
+def CarriageSpeedCharacterization():
     data = np.zeros((3, 30))
     test = Solenoid()
     for f in range(11, 14):
@@ -36,8 +35,43 @@ def main():
         stdev = stdev_data[f-11]
         RSD = stdev / mean
         print(f"Distance per 1k steps for {freq}Hz: Mean = {mean}mm | Std = {stdev}mm | RSD = {RSD}mm")
-    '''
+
+def FlowRateCharacterization():
+    data = np.zeros(30)
+    test = Solenoid()
+    for s in range(30):
+        ready = input("Please enter 'y' when ready to start: ")
+        if ready == 'y':
+            pass
+        test.pumpOn()
+        time.sleep(15)
+        test.pumpOff
+        measure = input("Enter volume in mL: ")
+        data[s] = float(measure)
+        print("Current data: ")
+        print(data)
+
+def FirmwareHardwareCQ():
     test = Solenoid()
     test.homeMotor('X')
+    test.homeMotor('Y')
+    print("Moving X 30mm")
+    test.moveMotor(30, 'X')
+    print("Moving Y 40mm")
+    test.moveMotor(40, 'Y')
+    print("Turning on Pump")
+    test.pumpOn()
+    test.setReservoirSelect(0)
+    time.sleep(2)
+    test.setReservoirSelect(1)
+    time.sleep(2)
+    test.setReservoirSelect(2)
+    time.sleep(2)
+    test.setReservoirSelect(3)
+    test.pumpOff()
+
+def main():
+    pass
+
 if __name__ == "__main__":
     main()
