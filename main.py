@@ -73,7 +73,7 @@ def FirmwareHardwareCQ():
     test.pumpOff()
 
 def main():
-    FirmwareHardwareCQ()
+    FlowRateCharacterization()
 
 if __name__ == "__main__":
     main()
