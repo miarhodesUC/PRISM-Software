@@ -71,7 +71,8 @@ def FirmwareHardwareCQ():
     test.pumpOff()
 
 def main():
-    FirmwareHardwareCQ()
+    test = Solenoid()
+    test.moveMotor(10, 'Y')
 
 if __name__ == "__main__":
     main()
