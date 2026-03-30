@@ -71,7 +71,7 @@ def FirmwareHardwareCQ():
     test.pumpOff()
 
 def main():
-    pass
+    FirmwareHardwareCQ()
 
 if __name__ == "__main__":
     main()
