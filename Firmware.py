@@ -121,8 +121,8 @@ class Solenoid():
     X_LIMIT_EVENT = 1
     Y_LIMIT_EVENT = 2
     MOVING_LIMIT_EVENT = 3
-
-    #LOCOMOTIVE MOTORS
+    '''
+     #LOCOMOTIVE MOTORS
     LOCOMOTIVE_DIRECTION_PIN = 17
     DIRECTION_PIN_X = 20
     DIRECTION_PIN_Y = 6
@@ -139,6 +139,7 @@ class Solenoid():
     RESERVOIR_SELECT_LOWBIT = 16
     AIR_VALVE_PIN = 26
 
+    '''
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
         hal.setAsInput(self.X_SWITCH_PIN)
