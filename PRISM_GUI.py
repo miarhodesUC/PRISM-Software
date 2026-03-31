@@ -137,16 +137,33 @@ class Ui_MainWindow(object):
         font.setPointSize(11)
         MainWindow.setFont(font)
 
-        # Central widget will be stacked to allow for multiple screens
+        # This stacked widget is what contains each screen of the app
         self.stackedWidget = QtWidgets.QStackedWidget(MainWindow)
         self.stackedWidget.setObjectName("stackedWidget")
         self.setupMainMenu()
         self.setupCycleEditor()
         self.setupSettings()
-        self.stackedWidget.setCurrentIndex(0)
-        MainWindow.setCentralWidget(self.stackedWidget)
+        self.stackedWidget.setCurrentIndex(0) #Sets the main menu as the currently displayed widget
+        MainWindow.setCentralWidget(self.stackedWidget) #Sets the stacked widget as the central widget (displayed as default)
 
-    def setupCycleEditor(self):
+    def setupMainMenu(self): # arranges all the buttons and labels for the main menu
+        self.widget_MainMenu = QtWidgets.QWidget()
+        self.widget_MainMenu.setObjectName("widget_MainMenu")
+        font = QtGui.QFont()
+        font.setPointSize(30)
+        self.label_Title = QtWidgets.QLabel(self.widget_MainMenu)
+        self.label_Title.setGeometry(QtCore.QRect(312, 60, 400, 60))
+        self.label_Title.setObjectName("label_Title")
+        self.label_Title.setText("PRISM LbL")
+        self.label_Title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.label_Title.setFont(font)
+
+        self.button_Start = self.createButton(self.widget_MainMenu, "Start", [412, 300, 200, 40], self.clickedStart)
+        self.button_Settings = self.createButton(self.widget_MainMenu, "Settings", [412, 400, 200, 40], self.clickedSettings)
+
+        self.stackedWidget.addWidget(self.widget_MainMenu)
+
+    def setupCycleEditor(self): # arranges all the buttons and labels for the cycle editor
         self.widget_CycleEditor = QtWidgets.QWidget()
         self.widget_CycleEditor.setObjectName("widget_CycleEditor")
         font = QtGui.QFont()
@@ -162,7 +179,6 @@ class Ui_MainWindow(object):
         self.lineEdit_numberOfCycles.setGeometry(QtCore.QRect(160, 500, 50, 30))
 
         self.button_addStep = self.createButton(self.widget_CycleEditor, "Add Step", [644, 160, 331, 31], self.addStepWidget)
-
 
         self.selectCoating = QtWidgets.QComboBox(self.widget_CycleEditor)
         self.selectCoating.setGeometry(QtCore.QRect(790, 50, 181, 31))
@@ -208,25 +224,8 @@ class Ui_MainWindow(object):
         self.lineEdit_SaveFileName = QtWidgets.QLineEdit(self.widget_CycleEditor)
         self.lineEdit_SaveFileName.setGeometry(QtCore.QRect(770, 520, 190, 30))
         self.stackedWidget.addWidget(self.widget_CycleEditor)
-
-    def setupMainMenu(self):
-        self.widget_MainMenu = QtWidgets.QWidget()
-        self.widget_MainMenu.setObjectName("widget_MainMenu")
-        font = QtGui.QFont()
-        font.setPointSize(30)
-        self.label_Title = QtWidgets.QLabel(self.widget_MainMenu)
-        self.label_Title.setGeometry(QtCore.QRect(312, 60, 400, 60))
-        self.label_Title.setObjectName("label_Title")
-        self.label_Title.setText("PRISM LbL")
-        self.label_Title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        self.label_Title.setFont(font)
-
-        self.button_Start = self.createButton(self.widget_MainMenu, "Start", [412, 300, 200, 40], self.clickedStart)
-        self.button_Settings = self.createButton(self.widget_MainMenu, "Settings", [412, 400, 200, 40], self.clickedSettings)
-
-        self.stackedWidget.addWidget(self.widget_MainMenu)
     
-    def setupSettings(self):
+    def setupSettings(self): # arranges settings screen
         font = QtGui.QFont()
         font.setPointSize(20)
         self.widget_Settings = QWidget()
@@ -261,6 +260,7 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.widget_Settings)
 
     def createButton(self, widget: QWidget, text: str, geometry: list[int], connected_method):
+        # quick way to make a button 
         object = QtWidgets.QPushButton(widget)
         object.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
         object.setText(text)
@@ -269,6 +269,7 @@ class Ui_MainWindow(object):
         return object
     
     def createLabel(self, widget: QWidget, text:str, geometry:list[int], font, alignment=Qt.AlignmentFlag.AlignLeft):
+        # quick way to make a label 
         object = QLabel(widget)
         object.setGeometry(QtCore.QRect(geometry[0], geometry[1], geometry[2], geometry[3]))
         object.setText(text)
