@@ -123,7 +123,7 @@ class CoatCycle():
         self.current_cycle += 1
 
 
-class Ui_MainWindow(object):
+class UI(object):
     def setupUi(self, MainWindow, ActiveCycle: CoatCycle):
         self.active_cycle = ActiveCycle
         # Setting up base for app
@@ -446,7 +446,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     ActiveCycle = CoatCycle()
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
+    ui = UI()
     ui.setupUi(MainWindow, ActiveCycle)
     MainWindow.show()
     sys.exit(app.exec_())
