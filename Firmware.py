@@ -143,23 +143,25 @@ class Solenoid():
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
+        self.importConfigs("configs.json")
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
+
     def importConfigs(self, config_file:str):
-        configs = json.load("configs.json")
+        with open("config_file", "r") as file:
+            configs = json.load(file)
         self.DIRECTION_PIN_X = configs['motor-pins']['direction-x']
         self.DIRECTION_PIN_Y = configs['motor-pins']['direction-y']
         self.LOCOMOTIVE_STEP_PIN_X = configs['motor-pins']['step-x']
         self.LOCOMOTIVE_STEP_PIN_Y = configs['motor-pins']['step-y']
         self.LOCOMOTIVE_STEP_PIN_T = configs['motor-pins']['step-t']
+        self.PERISTALTIC_STEP_PIN = configs['motor-pins']['step-pump']
         self.X_SWITCH_PIN = configs['input-pins']['limit-x']
         self.Y_SWITCH_PIN = configs['input-pins']['limit-y']
-        self.PERISTALTIC_STEP_PIN = configs['motor-pins']['step-pump']
         self.RESERVOIR_SELECT_HIGHBIT = configs['valve-pins']['reservoir-hi']
         self.RESERVOIR_SELECT_LOWBIT = configs['valve-pins']['reservoir-lo']
         self.AIR_VALVE_PIN = configs['valve-pins']['air']
         self.PWM_FREQUENCY_INDEX = configs['motor-speed']
-        pass
 
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)

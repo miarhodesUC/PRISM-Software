@@ -1,0 +1,20 @@
+{
+    "motor-pins": {
+        "direction-x"   : 20,
+        "direction-y"   : 6,
+        "step-x"        : 12,
+        "step-y"        : 19,
+        "step-t"        : 5,
+        "step-pump"     : 13
+    },
+    "valve-pins" : {
+        "reservoir-lo"  : 16,
+        "reservoir-hi"  : 21,
+        "air"           : 26
+    },
+    "input-pins" : {
+        "limit-x"       : 23,
+        "limit-y"       : 24
+    },
+    "motor-speed-index" : 12
+}
