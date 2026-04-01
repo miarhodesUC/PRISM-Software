@@ -73,8 +73,7 @@ def FirmwareHardwareCQ():
     test.pumpOff()
 
 def main():
-    test = Solenoid()
-    test.pumpOff()
+    FlowRateCharacterization()
 
 if __name__ == "__main__":
     main()

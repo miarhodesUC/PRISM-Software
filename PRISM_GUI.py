@@ -51,11 +51,6 @@ class CoatCycle():
         self.nozzle_path_list = os.listdir(self.basepath + '/nozzle_paths')
         self.coat_cycle_list = os.listdir(self.basepath + "/saved_cycles")
 
-    def addStep(self, reservoir, coat):
-        self.arr_reservoir.append(reservoir)
-        self.arr_coat_count.append(coat)
-        self.step_count += 1
-
     def generateSaveFile(self, filename): #TODO make this a JSON file
         coat_vector = self.coat_vector
         print(f"Coat vector: {coat_vector}")
@@ -112,9 +107,6 @@ class CoatCycle():
                 self.incrementCycle()
         else:
             self.firmware.startSequence(self.coat_vector)
-    
-    def changeCycleCount(self, cycle_count):
-        self.cycle_count = cycle_count
     
     def incrementStep(self):
         self.current_step += 1
