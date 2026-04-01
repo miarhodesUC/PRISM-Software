@@ -44,6 +44,7 @@ def FlowRateCharacterization():
     ready = input("Please enter 'y' when done loading")
     if ready == 'y':
         pass
+    test.pumpOff()
     for s in range(30):
         ready = input("Please enter 'y' when ready to start: ")
         if ready == 'y':
