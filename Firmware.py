@@ -149,7 +149,7 @@ class Solenoid():
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
 
     def importConfigs(self, config_file:str):
-        with open("config_file", "r") as file:
+        with open(config_file, "r") as file:
             configs = json.load(file)
         self.DIRECTION_PIN_X = configs['motor-pins']['direction-x']
         self.DIRECTION_PIN_Y = configs['motor-pins']['direction-y']
