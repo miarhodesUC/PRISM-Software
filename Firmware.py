@@ -86,7 +86,8 @@ class HAL(): # Contains basic GPIO commands
 
     def stopStepperMotor(self, step_pin, direction_pin):
         self.setPinLow(step_pin)
-        self.setPinLow(direction_pin)
+        if direction_pin is not None:
+            self.setPinLow(direction_pin)
         print(f"Stopping motor pin {step_pin}")
 
     def setAsInput(self, pin):
@@ -271,7 +272,7 @@ class Solenoid():
         self.hal.moveStepperMotor(self.PERISTALTIC_STEP_PIN, None, 0, self.DUTY_CYCLE_HALF, self.PWM_FREQUENCY_INDEX)
 
     def pumpOff(self):
-        self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, self.LOCOMOTIVE_DIRECTION_PIN)
+        self.hal.stopStepperMotor(self.PERISTALTIC_STEP_PIN, None)
 
     def openAirValve(self):
         self.hal.setPinHigh(self.AIR_VALVE_PIN)
