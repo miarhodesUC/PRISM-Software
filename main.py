@@ -51,7 +51,7 @@ def FlowRateCharacterization():
             pass
         test.pumpOn()
         time.sleep(15)
-        test.pumpOff
+        test.pumpOff()
         print(f"Test #{s+1}")
 
 def FirmwareHardwareCQ():
