@@ -142,9 +142,9 @@ class Solenoid():
     '''
     def __init__(self, hal = HAL()):
         self.hal = hal # 'imports' HAL object into this one for using HAL methods
+        self.importConfigs("configs.json")
         hal.setAsInput(self.X_SWITCH_PIN)
         hal.setAsInput(self.Y_SWITCH_PIN)
-        self.importConfigs("configs.json")
         #TODO (maybe): Add position tracking for soft limit checks
         #TODO (alt idea): distance sensors for tracking distance? (mostly directed at any future capstone groups)
 
