@@ -162,7 +162,7 @@ class Solenoid():
         self.RESERVOIR_SELECT_HIGHBIT = configs['valve-pins']['reservoir-hi']
         self.RESERVOIR_SELECT_LOWBIT = configs['valve-pins']['reservoir-lo']
         self.AIR_VALVE_PIN = configs['valve-pins']['air']
-        self.PWM_FREQUENCY_INDEX = configs['motor-speed']
+        self.PWM_FREQUENCY_INDEX = configs['motor-speed-index']
 
     def setReservoirSelect(self, reservoir:int): # tooling for selecting coating solution
         self.hal.selectDEMUX(reservoir, self.RESERVOIR_SELECT_LOWBIT, self.RESERVOIR_SELECT_HIGHBIT)
