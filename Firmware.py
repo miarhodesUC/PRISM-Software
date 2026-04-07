@@ -293,8 +293,9 @@ class Solenoid():
 
 class SCodeParse():
     # Fluid handling configs, purging is clearing the fluid line, loading is added new solution to the fluid line
-    PURGE_TIME = 10 #dummy value
-    LOAD_TIME = 10 #dummy value
+    RESERVOIR_TO_VALVE_LENGTH = 1 #dummy value, in mm
+    VALVE_TO_NOZZLE_LENGTH = 1 #dummy value, in mm
+    FLOW_SPEED = 7.6 # mm/s
     X_LENGTH = 240 # length of nozzle carriage track
     Y_LENGTH = 80 # length of available movement area for baseplate
 
@@ -309,13 +310,16 @@ class SCodeParse():
         self.executeCoatCycle()
     
     def executeCoatCycle(self):
+        self.loadAllFromReservoir()
         for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
             print(f"Layer {cycle_index} of {self.cycle_count} complete")
             for step_index in range(self.step_count): # iterates through each coating step
                 self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
-                # need to determine how long pump runs before fluid reaches nozzle
-                # also need to determine how long to clear spray
+                self.loadFromSelectedValve()
                 self.pathIterator()
+                self.commandHOME('X')
+                self.commandHOME('Y')
+                self.purgeSequence()
     
     def loadCoatCycle(self, coat_vector):
         self.step_count = coat_vector[2][0]
@@ -374,23 +378,36 @@ class SCodeParse():
             
     
     def purgeSequence(self):
-        self.motor_solenoid.setReservoirSelect(0) #MAGIC NUMBER ALERT, please fix later
-        self.commandPUMP('On')
-        self.commandSPRAY('On')
-        time.sleep(self.PURGE_TIME)
+        purge_time = self.FLOW_SPEED * self.VALVE_TO_NOZZLE_LENGTH
+        self.motor_solenoid.setReservoirSelect(0) # Opens cleaning solution valve
+        self.commandPUMP('On') # starts pumping
+        self.commandSPRAY('On') # starts spraying
+        time.sleep(3 * purge_time) # washes out valve-nozzle line effectively three times 
         self.commandPUMP('Off')
         self.commandSPRAY('Off')
 
-    def loadSequence(self):
-        self.commandPUMP('On')
-        self.commandSPRAY('On')
-        time.sleep(self.LOAD_TIME)
-        self.commandPUMP('Off')
-        self.commandSPRAY('Off')
+    def loadAllFromReservoir(self):
+        load_time = self.FLOW_SPEED * self.RESERVOIR_TO_VALVE_LENGTH
+        for open_reservoir in range(4):
+            self.motor_solenoid.setReservoirSelect(open_reservoir)
+            self.commandPUMP('On') # starts pumping
+            time.sleep(load_time) # pumps until fluid reaches valve
+            self.commandPUMP('Off')
+        self.purgeSequence() # ensures valves are clean
 
-    def mneumonicMatch(self, mneumonic, state):
+    def loadFromSelectedValve(self):
+        load_time = self.FLOW_SPEED * self.VALVE_TO_NOZZLE_LENGTH
+        self.commandPUMP('On') # starts pumping
+        time.sleep(load_time)
+        self.commandSPRAY('On')
+        time.sleep(0.5) # sprays for a little to prepare nozzle
+        self.commandSPRAY('Off') 
+        time.sleep(0.5) # pumps for a little extra to load nozzle
+        self.commandPUMP('Off')
+
+    def mneumonicMatch(self, mnemonic, state):
         print("Performing mneumonic match")
-        match mneumonic:
+        match mnemonic:
             case 'MOVE':
                 print("Found case 'MOVE'")
                 print(f"State: {state}")
@@ -417,7 +434,7 @@ class SCodeParse():
                 spray_state = state
                 self.commandSPRAY(spray_state)
             case _:
-                raise ValueError(f"Error in mneumonicMatch: invalid mneumonic {mneumonic}")
+                raise ValueError(f"Error in mneumonicMatch: invalid mneumonic {mnemonic}")
 
     def commandHOME(self, state):
         print("Executing command Home")
