@@ -17,7 +17,6 @@ from pigpio_shell import pigpio_shell as shell
 import Firmware as firmware
 
 
-# WARNING: Deleting cycles does not remove them from the backend
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
 # TODO: Use json file for name configurations
 

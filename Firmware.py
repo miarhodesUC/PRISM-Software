@@ -6,7 +6,7 @@ import time
 from numpy import heaviside as u
 import os
 
-# To any future programmers looking at this, my deepest apologies
+# My deepest apologies to any future developers
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
