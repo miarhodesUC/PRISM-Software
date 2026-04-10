@@ -9,7 +9,7 @@ Dark: 250 75 50
 """
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import Qt
 import csv
 import os
@@ -71,11 +71,19 @@ class CoatCycle():
         self.loadCoatVector()
         
     def loadCoatVector(self):
-        self.step_count = self.coat_vector[2][0]
-        self.cycle_count = self.coat_vector[2][1]
-        self.arr_reservoir = self.coat_vector[0]
-        self.arr_coat_count = self.coat_vector[1]
-        self.nozzle_path = self.coat_vector[3][0]
+        try:
+            self.step_count = self.coat_vector[2][0]
+            self.cycle_count = self.coat_vector[2][1]
+            self.arr_reservoir = self.coat_vector[0]
+            self.arr_coat_count = self.coat_vector[1]
+            self.nozzle_path = self.coat_vector[3][0]
+        except:
+            self.step_count = 'err'
+            self.cycle_count = 0
+            self.arr_reservoir = 0
+            self.arr_coat_count = 0
+            self.nozzle_path = 0
+            print("Error: incorrectly formatted file")
 
     def executeCycle(self):
         if self.demoMode: #demo mode is for program testing purposes, much easier to read console logs than watch hardware
@@ -419,6 +427,10 @@ class UI(object):
         self.active_cycle.loadSaveFile(filename)
         self.coat_vector = self.active_cycle.coat_vector
         self.loadCoatVector()
+        if self.step_count == 'err':
+            print("Error, loaded incorrectly formatted file")
+            QMessageBox.warning(self, "Coating Cycle Save File Error", "Save file is formatted incorrectly")
+            return
         for step in range(self.step_count):
             self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
         self.lineEdit_numberOfCycles.setText(str(self.cycle_count))
