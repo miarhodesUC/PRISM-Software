@@ -87,8 +87,15 @@ def demoTDR():
     test.moveMotor(-40, 'Y')
     test.homeMotor('X')
     test.homeMotor('Y')
+
+def preDemo():
+    test = Solenoid()
+    test.homeMotor('X')
+    test.homeMotor('Y')
+    test.moveMotor(100, 'Y')
+    test.moveMotor(40, 'X')
 def main():
-    demoTDR()
+    preDemo()
 
 if __name__ == "__main__":
     main()
