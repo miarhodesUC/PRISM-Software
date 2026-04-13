@@ -73,8 +73,22 @@ def FirmwareHardwareCQ():
     test.setReservoirSelect(3)
     test.pumpOff()
 
+def demoTDR():
+    test = Solenoid()
+    test.homeMotor('X')
+    test.homeMotor('Y')
+    print("Moving X 30mm")
+    test.moveMotor(30, 'X')
+    print("Moving Y 80mm")
+    test.moveMotor(80, 'Y')
+    print("Moving X -10mm")
+    test.moveMotor(-10, 'X')
+    print("Moving Y -40mm")
+    test.moveMotor(-40, 'Y')
+    test.homeMotor('X')
+    test.homeMotor('Y')
 def main():
-    FlowRateCharacterization()
+    demoTDR()
 
 if __name__ == "__main__":
     main()

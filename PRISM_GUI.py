@@ -14,14 +14,14 @@ from PyQt5.QtCore import Qt
 import csv
 import os
 from pigpio_shell import pigpio_shell as shell
-import Firmware as firmware
+#import Firmware as firmware
 
 
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
 # TODO: Use json file for name configurations
 
 class CoatCycle():
-    def __init__(self, firmware = firmware.SCodeParse(firmware.Solenoid(firmware.HAL(shell())))):
+    def __init__(self, firmware = 'firmware.SCodeParse(firmware.Solenoid(firmware.HAL(shell())))'):
         self.firmware = firmware
         self.demoMode = True
 
