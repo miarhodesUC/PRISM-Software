@@ -93,7 +93,7 @@ def preDemo():
     test.homeMotor('X')
     test.homeMotor('Y')
     test.moveMotor(100, 'Y')
-    test.moveMotor(40, 'X')
+    test.moveMotor(20, 'X')
 def main():
     preDemo()
 
