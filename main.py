@@ -95,7 +95,7 @@ def preDemo():
     test.moveMotor(100, 'Y')
     test.moveMotor(20, 'X')
 def main():
-    preDemo()
+    demoTDR()
 
 if __name__ == "__main__":
     main()

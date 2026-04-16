@@ -14,14 +14,14 @@ from PyQt5.QtCore import Qt
 import csv
 import os
 from pigpio_shell import pigpio_shell as shell
-#import Firmware as firmware
+from Firmware import SCodeParse
 
 
 # NOTE: Use itemAt() to access widgets positionally (can later use to access items in lists)
 # TODO: Use json file for name configurations
 
 class CoatCycle():
-    def __init__(self, firmware = 'firmware.SCodeParse(firmware.Solenoid(firmware.HAL(shell())))'):
+    def __init__(self, firmware = SCodeParse()):
         self.firmware = firmware
         self.demoMode = True
 
@@ -77,11 +77,7 @@ class CoatCycle():
             self.arr_coat_count = self.coat_vector[1]
             self.nozzle_path = self.coat_vector[3][0]
         except:
-            self.step_count = 'err'
-            self.cycle_count = 0
-            self.arr_reservoir = 0
-            self.arr_coat_count = 0
-            self.nozzle_path = 0
+            self.coat_vector = 'err'
             print("Error: incorrectly formatted file")
 
     def executeCycle(self):
@@ -425,11 +421,11 @@ class UI(object):
         filename = self.selectCycle.currentText()
         self.active_cycle.loadSaveFile(filename)
         self.coat_vector = self.active_cycle.coat_vector
-        self.loadCoatVector()
-        if self.step_count == 'err':
+        if self.coat_vector == 'err':
             print("Error, loaded incorrectly formatted file")
-            QMessageBox.warning(self, "Coating Cycle Save File Error", "Save file is formatted incorrectly")
+            QMessageBox.warning(self.widget_CycleEditor,"Coating Cycle Save File Error", "Save file is formatted incorrectly")
             return
+        self.loadCoatVector()
         for step in range(self.step_count):
             self.loadStepWidget(self.arr_coat_count[step], self.arr_reservoir[step])
         self.lineEdit_numberOfCycles.setText(str(self.cycle_count))

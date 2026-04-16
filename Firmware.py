@@ -7,6 +7,7 @@ from numpy import heaviside as u
 import os
 
 # My deepest apologies to any future developers
+# Also I promise any snarky comments are entirely directed at my own inner pedant
 
 class HAL(): # Contains basic GPIO commands
     PWM_FREQUENCY_LIST = [10, 20, 40, 50, 80, 100, 160, 200, 250, 320, 400, 500, 800, 1000, 1600, 2000, 4000, 8000]
@@ -293,8 +294,8 @@ class Solenoid():
 
 class SCodeParse():
     # Fluid handling configs, purging is clearing the fluid line, loading is added new solution to the fluid line
-    RESERVOIR_TO_VALVE_LENGTH = 1 #dummy value, in mm
-    VALVE_TO_NOZZLE_LENGTH = 1 #dummy value, in mm
+    RESERVOIR_TO_VALVE_LENGTH = 1/7.6 #dummy value, in mm
+    VALVE_TO_NOZZLE_LENGTH = 3/7.6 #dummy value, in mm
     FLOW_SPEED = 7.6 # mm/s
     X_LENGTH = 240 # length of nozzle carriage track
     Y_LENGTH = 80 # length of available movement area for baseplate
@@ -311,6 +312,8 @@ class SCodeParse():
     
     def executeCoatCycle(self):
         self.loadAllFromReservoir()
+        self.commandHOME('X')
+        self.commandHOME('Y')
         for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
             print(f"Layer {cycle_index} of {self.cycle_count} complete")
             for step_index in range(self.step_count): # iterates through each coating step
@@ -319,6 +322,25 @@ class SCodeParse():
                 self.pathIterator()
                 self.commandHOME('X')
                 self.commandHOME('Y')
+                self.purgeSequence()
+
+    def demoCoatCycle(self):
+        start = input("Enter 'y' when stopwatch is ready: ") # yes I know any input would work here, it doesnt matter 
+        if start == 'y':
+            pass 
+        self.loadAllFromReservoir()
+        self.commandHOME('X')
+        self.commandHOME('Y')
+        for cycle_index in range(self.cycle_count): # iterates through coating routine for the specified number of times
+            print(f"Layer {cycle_index} of {self.cycle_count} complete")
+            for step_index in range(self.step_count): # iterates through each coating step
+                self.motor_solenoid.setReservoirSelect(self.arr_reservoir[step_index])
+                self.commandWAIT('Check')
+                self.loadFromSelectedValve()
+                self.pathIterator()
+                self.commandHOME('X')
+                self.commandHOME('Y')
+                self.commandWAIT('Check')
                 self.purgeSequence()
     
     def loadCoatCycle(self, coat_vector):
@@ -379,10 +401,11 @@ class SCodeParse():
     
     def purgeSequence(self):
         purge_time = self.FLOW_SPEED * self.VALVE_TO_NOZZLE_LENGTH
+        rinse_count = 3 # TODO Find a standard for how many times a fluid line should be rinsed out
         self.motor_solenoid.setReservoirSelect(0) # Opens cleaning solution valve
         self.commandPUMP('On') # starts pumping
         self.commandSPRAY('On') # starts spraying
-        time.sleep(3 * purge_time) # washes out valve-nozzle line effectively three times 
+        time.sleep(rinse_count * purge_time) # washes out valve-nozzle line effectively three times 
         self.commandPUMP('Off')
         self.commandSPRAY('Off')
 
@@ -433,6 +456,11 @@ class SCodeParse():
                 print(f"State: {state}")
                 spray_state = state
                 self.commandSPRAY(spray_state)
+            case 'WAIT':
+                print("Found case 'WAIT'")
+                print(f"State: {state}")
+                wait_state = state
+                self.commandWAIT(wait_state)
             case _:
                 raise ValueError(f"Error in mneumonicMatch: invalid mneumonic {mnemonic}")
 
@@ -483,6 +511,15 @@ class SCodeParse():
                 duty_cycle = int(state)
                 self.motor_solenoid.pwmAirValve(duty_cycle)
                 print(f"Modulating air compressor at {duty_cycle/255}")
+    def commandWAIT(self, state):
+        match state:
+            case "Check":
+                check = input("Enter 'y' when ready to continue: ")
+                if check == 'y':
+                    pass
+            case _:
+                sleep_time = int(state)
+                time.sleep(sleep_time)
 
 
 
