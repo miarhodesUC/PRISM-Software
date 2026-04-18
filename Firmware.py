@@ -1,4 +1,3 @@
-from pigpio_shell import pigpio_shell as shell
 import pigpio 
 import csv
 import json
