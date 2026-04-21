@@ -96,6 +96,8 @@ def preDemo():
     test.moveMotor(20, 'X')
 
 def main():
+    preDemo()
+    time.sleep(5)
     demoTDR()
 
 if __name__ == "__main__":
