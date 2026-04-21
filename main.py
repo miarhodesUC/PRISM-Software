@@ -94,6 +94,7 @@ def preDemo():
     test.homeMotor('Y')
     test.moveMotor(100, 'Y')
     test.moveMotor(20, 'X')
+
 def main():
     demoTDR()
 
