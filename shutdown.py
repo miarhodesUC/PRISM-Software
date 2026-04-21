@@ -7,10 +7,6 @@ from Firmware import HAL, Solenoid, SCodeParse
 
 def shutdown():
     test = Solenoid()
-    test.homeMotor('X')
-    test.homeMotor('Y')
-    test.moveMotor(100, 'Y')
-    test.moveMotor(20, 'X')
-
+    test.shutdown()
 if __name__ == "__main__":
     shutdown()
