@@ -84,24 +84,24 @@ def demoTDR():
     print("Moving Y 80mm")
     test.moveMotor(80, 'Y')
     test.setReservoirSelect(2)
+    test.openAirValve()
     print("Moving X -10mm")
     test.moveMotor(-10, 'X')
     test.setReservoirSelect(0)
     print("Moving Y -40mm")
     test.moveMotor(-40, 'Y')
+    test.closeAirValve()
     test.homeMotor('X')
     test.homeMotor('Y')
 
 def preDemo():
     test = Solenoid()
-    test.homeMotor('X')
-    test.homeMotor('Y')
     test.moveMotor(100, 'Y')
     test.moveMotor(20, 'X')
 
 def main():
     preDemo()
-    time.sleep(5)
+    time.sleep(2)
     demoTDR()
 
 if __name__ == "__main__":
